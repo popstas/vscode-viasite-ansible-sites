@@ -1,7 +1,7 @@
 {
   "name": "ansible-server-sites",
   "displayName": "ansible-server-sites",
-  "description": "Clone or SSH any site from ansible's yml configs of viasite-ansible/ansible-server",
+  "description": "Operations with sites deployed with viasite-ansible/ansible-server",
   "version": "0.0.1",
   "publisher": "popstas",
   "engines": {
@@ -15,6 +15,10 @@
     "onCommand:ansible-server-sites.site-clone",
     "onCommand:ansible-server-sites.site-configs"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/viasite/vscode-viasite-ansible-sites.git"
+  },
   "main": "./extension",
   "contributes": {
     "commands": [
@@ -24,11 +28,11 @@
       },
       {
         "command": "ansible-server-sites.site-clone",
-        "title": "ansible-server - Git clone site"
+        "title": "ansible-server: Git clone site"
       },
       {
         "command": "ansible-server-sites.site-configs",
-        "title": "ansible-server - Generate configs for site"
+        "title": "ansible-server: Generate configs for site"
       }
     ],
     "configuration": {
