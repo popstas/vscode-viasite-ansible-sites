@@ -1,0 +1,56 @@
+{
+  "name": "ansible-server-sites",
+  "displayName": "ansible-server-sites",
+  "description": "Clone or SSH any site from ansible's yml configs of viasite-ansible/ansible-server",
+  "version": "0.0.1",
+  "publisher": "popstas",
+  "engines": {
+    "vscode": "^1.15.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:ansible-server-sites.site-ssh",
+    "onCommand:ansible-server-sites.site-clone",
+    "onCommand:ansible-server-sites.site-configs"
+  ],
+  "main": "./extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ansible-server-sites.site-ssh",
+        "title": "ansible-server: SSH to site"
+      },
+      {
+        "command": "ansible-server-sites.site-clone",
+        "title": "ansible-server - Git clone site"
+      },
+      {
+        "command": "ansible-server-sites.site-configs",
+        "title": "ansible-server - Generate configs for site"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "ansible-server-sites",
+      "properties": {
+        "ansible-server-sites.json_url": {
+          "type": "string",
+          "description": "JSON URL of sites",
+          "default": ""
+        }
+      }
+    }
+  },
+  "scripts": {
+    "postinstall": "node ./node_modules/vscode/bin/install"
+  },
+  "devDependencies": {
+    "vscode": "^1.1.5",
+    "@types/node": "^7.0.0"
+  },
+  "dependencies": {
+    "punycode": "^2.1.0"
+  }
+}
