@@ -124,7 +124,11 @@ async function commandSiteConfigs(){
     let sites = await getSites();
     let site = await selectSite(sites);
     if(vscode.workspace.rootPath){
-        fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
+        try{
+            fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
+        } catch(err){
+            vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
+        }
     }
 
     //console.log('site: ', site);
