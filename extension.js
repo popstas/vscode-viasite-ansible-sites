@@ -166,7 +166,7 @@ async function commandSiteConfigs(){
     //console.log(sftpConfig);
     let doc = await vscode.workspace.openTextDocument(vscode.Uri.file('project-config.md').with({ scheme: 'untitled' }));
     let msg = '# Insert to your `ftp-simple.json`:\n\n' + '``` json\n,' + JSON.stringify(sftpData, null, '\t') + '\n```';
-    msg = msg + '\n\n # Insert to your `configurations` of `launch.json`:\n\n' + '``` json\n,' + JSON.stringify(debugData, null, '\t') + '\n```';
+    msg = msg + '\n\n # Insert to your `configurations` of `launch.json`:\n\n' + '``` json\n' + JSON.stringify(debugData, null, '\t') + '\n```';
     vscode.window.showTextDocument(doc);
     const edit = new vscode.WorkspaceEdit();
     edit.insert(doc.uri, new vscode.Position(0, 0), msg);
