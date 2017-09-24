@@ -2,17 +2,17 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-var vscode = require('vscode');
-var fetch = require('fetch-everywhere');
-var fs = require('fs');
-var path = require('path');
-var os = require('os');
-var punycode = require('punycode');
-var sites = [];
-var terminals = [];
-var homeDir = os.homedir();
-var globalContext;
-var cacheJsonPath = vscode.workspace.rootPath + '/.vscode/.ansible-site';
+const vscode = require('vscode');
+const fetch = require('fetch-everywhere');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const punycode = require('punycode');
+let sites = [];
+let terminals = [];
+const homeDir = os.homedir();
+let globalContext;
+const cacheJsonPath = vscode.workspace.rootPath + '/.vscode/.ansible-site';
 // const ftpConfigPath = getConfigPath('ftp-simple.json');
 
 // function getConfigPath(filename){
@@ -29,14 +29,14 @@ var cacheJsonPath = vscode.workspace.rootPath + '/.vscode/.ansible-site';
 // your extension is activated the very first time the command is executed
 function activate(context) {
     console.log('ansible-server-sites start')
-    var subscriptions = [];
+    let subscriptions = [];
     globalContext = context;
 
     subscriptions.push(vscode.commands.registerCommand('ansible-server-sites.site-ssh', commandSiteSSH));
     subscriptions.push(vscode.commands.registerCommand('ansible-server-sites.site-clone', commandGitClone));
     subscriptions.push(vscode.commands.registerCommand('ansible-server-sites.site-configs', commandSiteConfigs));
 
-    for(var i=0; i<subscriptions.length; i++){
+    for(let i=0; i<subscriptions.length; i++){
         context.subscriptions.push(subscriptions[i]);
     }
 
@@ -45,17 +45,16 @@ function activate(context) {
 exports.activate = activate;
 
 async function commandSiteSSH(){
-    var sites = await getSites();
-    var site = await selectSite();
+    let sites = await getSites();
+    let site = await selectSite(sites);
     console.log('site for SSH after selectSite: ', site);
-    domain = site.domain;
-    var terminal = terminals.find(function (element, index, array) { return element.name == this }, domain);
+    let domain = site.domain;
+    let terminal = terminals.find(function (element, index, array) { return element.name == this }, domain);
     if (terminal === undefined) { // If the terminal does not exist
         terminal = vscode.window.createTerminal(domain);
         terminals.push({ "name": domain, "terminal": terminal });
-        sshCommand = site.ssh_command;
-        console.log('Executing: ', sshCommand);
-        terminal.sendText(sshCommand);
+        console.log('Executing: ', site.ssh_command);
+        terminal.sendText(site.ssh_command);
     }
     else {
         terminal = terminal.terminal;
@@ -64,13 +63,13 @@ async function commandSiteSSH(){
 }
 
 async function commandGitClone(){
-    var sites = await getSites();
-    var site = await selectSite();
+    let sites = await getSites();
+    let site = await selectSite(sites);
 
     console.log('site after selectSite: ', site);
     console.log(site.git_clone_url);
 
-    var url = await vscode.window.showInputBox({
+    let url = await vscode.window.showInputBox({
         value: site.git_clone_url,
         prompt: "Repository URL",
         ignoreFocusOut: true
@@ -83,27 +82,26 @@ async function commandGitClone(){
         value,
         ignoreFocusOut: true
     });
-    var name = path.basename(site.site_root)
-    var clone_path = parentPath + path.sep + name;
+    let name = path.basename(site.site_root)
+    let clone_path = parentPath + path.sep + name;
     clone_path = clone_path.split('\\').join('/');
     console.log('clone_path', clone_path);
 
     // Open project in new window
     if(fs.existsSync(clone_path)){
         vscode.window.showInformationMessage(name + ' exists at ' + parentPath + ', opening in new window');
-        var uri = vscode.Uri.parse('file:///' + clone_path);
+        let uri = vscode.Uri.parse('file:///' + clone_path);
         vscode.commands.executeCommand('vscode.openFolder', uri, true);
         return false;
     }
 
     // clone terminal command
-    terminal = vscode.window.createTerminal();
-    sshCommand = 'git clone ' + url + ' ' + clone_path;
+    let terminal = vscode.window.createTerminal();
+    let sshCommand = 'git clone ' + url + ' ' + clone_path;
     terminal.sendText(sshCommand);
     terminal.show();
 
     // this.git.clone(url, parentPath);
-
     // try {
     //     vscode.window.withProgress({ location: ProgressLocation.SourceControl, title: "Cloning git repository..." }, () => clonePromise);
     //     vscode.window.withProgress({ location: ProgressLocation.Window, title: "Cloning git repository..." }, () => clonePromise);
@@ -123,35 +121,20 @@ async function commandGitClone(){
 }
 
 async function commandSiteConfigs(){
-    //sftpConfig = loadSimpleFtpConfig();
-    //console.log(sftpConfig);
-
-    var site;
-    var sites = await getSites();
-    var site = await selectSite();
+    let sites = await getSites();
+    let site = await selectSite(sites);
     if(vscode.workspace.rootPath){
         fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
     }
 
-    siteDomain = site.domain;
-    //var site = sites[0];
     console.log('site: ', site);
 
     if(!site){
         return false;
     }
 
-    // var sitesMatches = [];
-    // sftpConfig.forEach(function(element) {
-    //     if(element.name == siteDomain){
-    //         console.log('Found config for site');
-    //         sitesMatches.push(element);
-    //         return element;
-    //     }
-    // }, this);
-
     console.log('matched one site');
-    var sftpData = {
+    let sftpData = {
         "name": site.domain,
         "host": site.domain,
         "port": 22,
@@ -166,7 +149,7 @@ async function commandSiteConfigs(){
     };
     sftpData.project[vscode.workspace.rootPath] = site.site_root;
 
-    debugData = {
+    let debugData = {
         "name": "Listen for XDebug",
         "type": "php",
         "request": "launch",
@@ -177,15 +160,15 @@ async function commandSiteConfigs(){
 
     //sftpConfig.push(sftpData);
     //console.log(sftpConfig);
-    var doc = await vscode.workspace.openTextDocument(vscode.Uri.file('project-config.md').with({ scheme: 'untitled' }));
-    var msg = '# Insert to your `ftp-simple.json`:\n\n' + '``` json\n,' + JSON.stringify(sftpData, null, '\t') + '\n```';
+    let doc = await vscode.workspace.openTextDocument(vscode.Uri.file('project-config.md').with({ scheme: 'untitled' }));
+    let msg = '# Insert to your `ftp-simple.json`:\n\n' + '``` json\n,' + JSON.stringify(sftpData, null, '\t') + '\n```';
     msg = msg + '\n\n # Insert to your `configurations` of `launch.json`:\n\n' + '``` json\n,' + JSON.stringify(debugData, null, '\t') + '\n```';
     vscode.window.showTextDocument(doc);
     const edit = new vscode.WorkspaceEdit();
     edit.insert(doc.uri, new vscode.Position(0, 0), msg);
     vscode.workspace.applyEdit(edit);
 
-    var answer = await vscode.window.showInformationMessage('Open stp-simple.json?', {
+    let answer = await vscode.window.showInformationMessage('Open stp-simple.json?', {
         title: 'Yes',
         id: 'ansible-server-open-sftp'
     }, {
@@ -228,31 +211,31 @@ async function commandSiteConfigs(){
 //     jsonRaw = fs.writeFileSync(ftpConfigPath, jsonRaw);
 // }
 
-function selectSite(){
-    var options = sites.map(function(site){
+function selectSite(sites){
+    let options = sites.map(function(site){
         return {
             label: punycode.toUnicode(site.domain),
             description: site.host + (site.group ? ' / ' + site.group : ''),
         };
     });
 
-    var promise = new Promise((resolve, reject) => {
+    let promise = new Promise((resolve, reject) => {
         if(vscode.workspace.rootPath && fs.existsSync(cacheJsonPath)){
-            var jsonRaw = fs.readFileSync(cacheJsonPath).toString();
-            site = JSON.parse(jsonRaw);
+            let jsonRaw = fs.readFileSync(cacheJsonPath).toString();
+            let site = JSON.parse(jsonRaw);
             resolve(site);
             return;
         }
 
-        var p = vscode.window.showQuickPick(options, {placeHolder:'domain'});
+        let p = vscode.window.showQuickPick(options, {placeHolder:'domain'});
         p.then(function(val){
             console.log('selected: ', val);
-            if(val == undefined){
+            if(val === undefined){
                 return 'Nothing selected';
             }
 
-            var ind = options.indexOf(val);
-            var site = sites[ind];
+            let ind = options.indexOf(val);
+            let site = sites[ind];
             resolve(site);
         });
     });
@@ -271,7 +254,7 @@ function getSites(){
             console.log('resolve sites from runtime cache');
             resolve(sites);
         } else if(cached && cached.length > 0) {
-            sites = cached;
+            let sites = cached;
             console.log('resolve sites from globalState', cached);
             resolve(sites);
         } else {
@@ -281,7 +264,7 @@ function getSites(){
             return fetch(url).then((response) => {
                 return response.json()
             }).then((json) => {
-                sites = json.sites;
+                let sites = json.sites;
                 globalContext.globalState.update('ansible-server-sites', sites);
                 console.log('store global cache');
                 resolve(sites);
