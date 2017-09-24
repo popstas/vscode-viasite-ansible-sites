@@ -28,7 +28,7 @@ const cacheJsonPath = vscode.workspace.rootPath + '/.vscode/.ansible-site';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
-    console.log('ansible-server-sites start')
+    //console.log('ansible-server-sites start')
     let subscriptions = [];
     globalContext = context;
 
@@ -47,13 +47,13 @@ exports.activate = activate;
 async function commandSiteSSH(){
     let sites = await getSites();
     let site = await selectSite(sites);
-    console.log('site for SSH after selectSite: ', site);
+    //console.log('site for SSH after selectSite: ', site);
     let domain = site.domain;
     let terminal = terminals.find(function (element, index, array) { return element.name == this }, domain);
     if (terminal === undefined) { // If the terminal does not exist
         terminal = vscode.window.createTerminal(domain);
         terminals.push({ "name": domain, "terminal": terminal });
-        console.log('Executing: ', site.ssh_command);
+        //console.log('Executing: ', site.ssh_command);
         terminal.sendText(site.ssh_command);
     }
     else {
@@ -66,8 +66,8 @@ async function commandGitClone(){
     let sites = await getSites();
     let site = await selectSite(sites);
 
-    console.log('site after selectSite: ', site);
-    console.log(site.git_clone_url);
+    //console.log('site after selectSite: ', site);
+    //console.log(site.git_clone_url);
 
     let url = await vscode.window.showInputBox({
         value: site.git_clone_url,
@@ -85,7 +85,7 @@ async function commandGitClone(){
     let name = path.basename(site.site_root)
     let clone_path = parentPath + path.sep + name;
     clone_path = clone_path.split('\\').join('/');
-    console.log('clone_path', clone_path);
+    //console.log('clone_path', clone_path);
 
     // Open project in new window
     if(fs.existsSync(clone_path)){
@@ -127,13 +127,13 @@ async function commandSiteConfigs(){
         fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
     }
 
-    console.log('site: ', site);
+    //console.log('site: ', site);
 
     if(!site){
         return false;
     }
 
-    console.log('matched one site');
+    //console.log('matched one site');
     let sftpData = {
         "name": site.domain,
         "host": site.domain,
@@ -177,7 +177,7 @@ async function commandSiteConfigs(){
     });
 
     if(answer && answer.id == 'ansible-server-open-sftp'){
-        console.log('open sftp config');
+        //console.log('open sftp config');
         vscode.commands.executeCommand('ftp.config');
     }
 
@@ -188,7 +188,7 @@ async function commandSiteConfigs(){
         title: 'No',
         id: 'No'
     });
-    console.log(answer);
+    //console.log(answer);
     if(answer && answer.id == 'ansible-server-open-launch'){
         vscode.commands.executeCommand('debug.addConfiguration');
         vscode.commands.executeCommand('workbench.action.debug.configure');
@@ -251,14 +251,14 @@ function getSites(){
     var cached = []; //globalContext.globalState.get('ansible-server-sites') || [];    
     var promise = new Promise((resolve, reject) => {
         if(sites.length > 0){
-            console.log('resolve sites from runtime cache');
+            //console.log('resolve sites from runtime cache');
             resolve(sites);
         } else if(cached && cached.length > 0) {
             let sites = cached;
-            console.log('resolve sites from globalState', cached);
+            //console.log('resolve sites from globalState', cached);
             resolve(sites);
         } else {
-            console.log('resolve sites from url...')
+            //console.log('resolve sites from url...')
             const config = vscode.workspace.getConfiguration('ansible-server-sites');
             const url = config.get('json_url');
             return fetch(url).then((response) => {
@@ -266,14 +266,10 @@ function getSites(){
             }).then((json) => {
                 let sites = json.sites;
                 globalContext.globalState.update('ansible-server-sites', sites);
-                console.log('store global cache');
+                //console.log('store global cache');
                 resolve(sites);
             });
         }
     });
     return promise;
-}
-
-function initExtension(){
-    console.log('ansible-server-sites initExtenstion()');
 }
