@@ -1,9 +1,9 @@
-//'use strict';
+'use strict';
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 var vscode = require('vscode');
-var request = require('request');
+var fetch = require('fetch-everywhere');
 var fs = require('fs');
 var path = require('path');
 var os = require('os');
@@ -276,17 +276,14 @@ function getSites(){
             resolve(sites);
         } else {
             console.log('resolve sites from url...')
-            var request = require('request');
             const config = vscode.workspace.getConfiguration('ansible-server-sites');
             const url = config.get('json_url');
-            return request(url, function (error, response, body) {
-                sites = JSON.parse(body).sites;
+            return fetch(url).then((response) => {
+                return response.json()
+            }).then((json) => {
+                sites = json.sites;
                 globalContext.globalState.update('ansible-server-sites', sites);
                 console.log('store global cache');
-                //console.log('error:', error); // Print the error if one occurred
-                //console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-                //console.log('body:', body);
-                //console.log('sites:', sites);
                 resolve(sites);
             });
         }

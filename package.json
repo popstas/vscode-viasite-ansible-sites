@@ -2,7 +2,7 @@
   "name": "ansible-server-sites",
   "displayName": "ansible-server-sites",
   "description": "Operations with sites deployed with viasite-ansible/ansible-server",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "publisher": "popstas",
   "engines": {
     "vscode": "^1.15.0"
@@ -13,7 +13,8 @@
   "activationEvents": [
     "onCommand:ansible-server-sites.site-ssh",
     "onCommand:ansible-server-sites.site-clone",
-    "onCommand:ansible-server-sites.site-configs"
+    "onCommand:ansible-server-sites.site-configs",
+    "*"
   ],
   "repository": {
     "type": "git",
@@ -55,6 +56,7 @@
     "@types/node": "^7.0.0"
   },
   "dependencies": {
+    "fetch-everywhere": "^1.0.5",
     "punycode": "^2.1.0"
   }
 }
