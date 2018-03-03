@@ -44,6 +44,11 @@
           "type": "string",
           "description": "JSON URL of sites",
           "default": ""
+        },
+        "ansible-server-sites.json_cache_time": {
+          "type": "integer",
+          "description": "JSON cache time, seconds",
+          "default": 3600
         }
       }
     }
@@ -56,7 +61,7 @@
     "@types/node": "^7.0.0"
   },
   "dependencies": {
-    "fetch-everywhere": "^1.0.5",
+    "node-fetch": "^2.0.0",
     "punycode": "^2.1.0"
   }
 }

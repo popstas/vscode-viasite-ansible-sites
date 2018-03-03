@@ -3,12 +3,15 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
-const fetch = require('fetch-everywhere');
+const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const punycode = require('punycode');
-let sites = [];
+let sitesCache = {
+    time: 0,
+    sites: []
+};
 let globalContext;
 const cacheJsonPath = vscode.workspace.rootPath + '/.vscode/.ansible-site';
 // const ftpConfigPath = getConfigPath('ftp-simple.json');
@@ -37,8 +40,6 @@ function activate(context) {
     for(let i=0; i<subscriptions.length; i++){
         context.subscriptions.push(subscriptions[i]);
     }
-
-    getSites();
 }
 exports.activate = activate;
 
@@ -275,28 +276,36 @@ function deactivate() {
 exports.deactivate = deactivate;
 
 function getSites(){
-    var cached = []; //globalContext.globalState.get('ansible-server-sites') || [];    
-    var promise = new Promise((resolve, reject) => {
-        if(sites.length > 0){
-            //console.log('resolve sites from runtime cache');
-            resolve(sites);
-        } else if(cached && cached.length > 0) {
-            let sites = cached;
-            //console.log('resolve sites from globalState', cached);
-            resolve(sites);
-        } else {
-            //console.log('resolve sites from url...')
-            const config = vscode.workspace.getConfiguration('ansible-server-sites');
-            const url = config.get('json_url');
-            return fetch(url).then((response) => {
-                return response.json()
-            }).then((json) => {
-                let sites = json.sites;
-                globalContext.globalState.update('ansible-server-sites', sites);
-                //console.log('store global cache');
-                resolve(sites);
-            });
+    const config = vscode.workspace.getConfiguration('ansible-server-sites');
+    const cacheTime = config.get('json_cache_time', 300);
+    return new Promise((resolve, reject) => {
+        // cache
+        if(sitesCache.sites.length > 0){
+            let cacheAgeSeconds = (new Date().getTime() - sitesCache.time.getTime()) / 1000;
+            // console.log('cache age: ' + cacheAgeSeconds);
+            if(cacheAgeSeconds < cacheTime){
+                // console.log('resolve sites from runtime cache');
+                resolve(sitesCache.sites);
+                return;
+            }
         }
+
+        // fetch
+        // console.log('resolve sites from url...')
+        const url = config.get('json_url');
+        fetch(url)
+            .then(response => {
+                if(response.status != 200){
+                    throw new Error('Failed to fetch ' + url + ', status ' + response.status);
+                }
+                return response.json();
+            })
+            .then(json => {
+                sitesCache.sites = json.sites;
+                sitesCache.time = new Date()
+                // console.log('store global cache');
+                resolve(sitesCache.sites);
+            })
+            .catch(err => console.error(err));
     });
-    return promise;
 }
