@@ -9,14 +9,12 @@ const path = require('path');
 const os = require('os');
 const punycode = require('punycode');
 let sites = [];
-let terminals = [];
-const homeDir = os.homedir();
 let globalContext;
 const cacheJsonPath = vscode.workspace.rootPath + '/.vscode/.ansible-site';
 // const ftpConfigPath = getConfigPath('ftp-simple.json');
 
 // function getConfigPath(filename){
-//     var folder = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.platform == 'linux' ? homeDir + '/.config' : '/var/local');
+//     var folder = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.platform == 'linux' ? process.HOMEPATH + '/.config' : '/var/local');
 //     if(/^[A-Z]\:[/\\]/.test(folder)) folder = folder.substring(0, 1).toLowerCase() + folder.substring(1);
 //     return normalize([folder, "/Code/User/", filename ? filename : ""].join('/'));
 // }
@@ -49,16 +47,9 @@ async function commandSiteSSH(){
     let site = await selectSite(sites);
     //console.log('site for SSH after selectSite: ', site);
     let domain = site.domain;
-    let terminal = terminals.find(function (element, index, array) { return element.name == this }, domain);
-    if (terminal === undefined) { // If the terminal does not exist
-        terminal = vscode.window.createTerminal(domain);
-        terminals.push({ "name": domain, "terminal": terminal });
-        //console.log('Executing: ', site.ssh_command);
-        terminal.sendText(site.ssh_command);
-    }
-    else {
-        terminal = terminal.terminal;
-    }
+    let terminal = vscode.window.createTerminal(domain);
+    //console.log('Executing: ', site.ssh_command);
+    terminal.sendText(site.ssh_command);
     terminal.show();
 }
 
@@ -76,7 +67,7 @@ async function commandGitClone(){
     });
 
     const config = vscode.workspace.getConfiguration('git');
-    const value = config.get('defaultCloneDirectory') || os.homedir();
+    const value = config.get('defaultCloneDirectory') || process.HOMEPATH;
     const parentPath = await vscode.window.showInputBox({
         prompt: "Parent Directory",
         value,
@@ -265,7 +256,7 @@ function selectSite(sites){
 
         let p = vscode.window.showQuickPick(options, {placeHolder:'domain'});
         p.then(function(val){
-            console.log('selected: ', val);
+            //console.log('selected: ', val);
             if(val === undefined){
                 return 'Nothing selected';
             }
