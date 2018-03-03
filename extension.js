@@ -162,29 +162,39 @@ async function commandSiteConfigs(){
         "localSourceRoot": "${workspaceRoot}"
     };
 
+    let winscpConfig = '[Sessions\\' + site.domain + ']\n' +
+    'HostName=' + site.domain + '\n' +
+    'UserName=' + site.user + '\n' +
+    'LocalDirectory=C:\n' +
+    'RemoteDirectory=' + site.site_root;
+
     //sftpConfig.push(sftpData);
     //console.log(sftpConfig);
     let doc = await vscode.workspace.openTextDocument(vscode.Uri.file('project-config.md').with({ scheme: 'untitled' }));
     let msg = '# Insert to your `ftp-simple.json`:\n\n' + '``` json\n,' + JSON.stringify(sftpData, null, '\t') + '\n```';
     msg = msg + '\n\n # Insert to your `configurations` of `launch.json`:\n\n' + '``` json\n' + JSON.stringify(debugData, null, '\t') + '\n```';
+    if(process.platform == 'win32'){
+        msg = msg + '\n\n # Insert to your `WinSCP.ini`:\n\n' + '``` ini\n' + winscpConfig + '\n```';
+    }
     vscode.window.showTextDocument(doc);
     const edit = new vscode.WorkspaceEdit();
     edit.insert(doc.uri, new vscode.Position(0, 0), msg);
     vscode.workspace.applyEdit(edit);
 
-    let answer = await vscode.window.showInformationMessage('Open stp-simple.json?', {
+    // ftp-simple.json
+    let answer = await vscode.window.showInformationMessage('Open ftp-simple.json?', {
         title: 'Yes',
         id: 'ansible-server-open-sftp'
     }, {
         title: 'No',
         id: 'No'
     });
-
     if(answer && answer.id == 'ansible-server-open-sftp'){
         //console.log('open sftp config');
         vscode.commands.executeCommand('ftp.config');
     }
 
+    // launch.json
     answer = await vscode.window.showInformationMessage('Open launch.json?', {
         title: 'Yes',
         id: 'ansible-server-open-launch'
@@ -192,10 +202,32 @@ async function commandSiteConfigs(){
         title: 'No',
         id: 'No'
     });
-    //console.log(answer);
     if(answer && answer.id == 'ansible-server-open-launch'){
         vscode.commands.executeCommand('debug.addConfiguration');
         vscode.commands.executeCommand('workbench.action.debug.configure');
+    }
+
+    // winscp.ini
+    if(process.platform == 'win32'){
+        let winscpIniPath = process.env.APPDATA + '/winscp.ini';
+        if(fs.existsSync(winscpIniPath)){
+            answer = await vscode.window.showInformationMessage('Write winscp.ini?', {
+                title: 'Yes',
+                id: 'ansible-server-write-winscp'
+            }, {
+                title: 'No',
+                id: 'No'
+            });
+            if(answer && answer.id == 'ansible-server-write-winscp'){
+                try{
+                    fs.appendFileSync(winscpIniPath, '\n\n' + winscpConfig);
+                } catch(err){
+                    vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
+                }
+            }
+        } else {
+            vscode.showInformationMessage(winscpIniPath + ' not found, open Options - Preferences - Storage - set Configuration storage - Automatic INI file')
+        }
     }
 }
 
