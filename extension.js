@@ -218,7 +218,7 @@ async function commandSiteConfigs(){
                 }
             }
         } else {
-            vscode.showInformationMessage(winscpIniPath + ' not found, open Options - Preferences - Storage - set Configuration storage - Automatic INI file')
+            vscode.window.showErrorMessage('%APPDATA%\\winscp.ini not found, open Options - Preferences - Storage - set Configuration storage - Automatic INI file')
         }
     }
 }
