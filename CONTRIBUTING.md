@@ -1,0 +1,5 @@
+Publish:
+
+```
+npm run release
+```
