@@ -2,7 +2,7 @@
     "name": "ansible-server-sites",
     "displayName": "ansible-server-sites",
     "description": "Operations with sites deployed with viasite-ansible/ansible-server",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "publisher": "popstas",
     "engines": {
         "vscode": "^1.15.0"
@@ -49,6 +49,11 @@
                     "type": "integer",
                     "description": "JSON cache time, seconds",
                     "default": 3600
+                },
+                "ansible-server-sites.winscp_ini_path": {
+                    "type": "string",
+                    "description": "Path to WinSCP.ini file",
+                    "default": ""
                 }
             }
         }

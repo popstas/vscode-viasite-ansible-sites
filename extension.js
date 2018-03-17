@@ -201,7 +201,8 @@ async function commandSiteConfigs(){
 
     // winscp.ini
     if(process.platform == 'win32'){
-        let winscpIniPath = process.env.APPDATA + '/winscp.ini';
+        const config = vscode.workspace.getConfiguration('ansible-server-sites');
+        const winscpIniPath = config.get('winscp_ini_path', process.env.APPDATA + '/winscp.ini');
         if(fs.existsSync(winscpIniPath)){
             answer = await vscode.window.showInformationMessage('Write winscp.ini?', {
                 title: 'Yes',
