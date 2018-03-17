@@ -53,7 +53,7 @@
                 "ansible-server-sites.winscp_ini_path": {
                     "type": "string",
                     "description": "Path to WinSCP.ini file",
-                    "default": 3600
+                    "default": ""
                 }
             }
         }
