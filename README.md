@@ -21,8 +21,11 @@ Open site SSH console in 3 clicks
 - show config for remote debug site
 - try to write config for remote site in winscp.ini
 
-For Winscp.ini write you should open Options - Preferences - Storage - set Configuration storage - Automatic INI file
+For Winscp.ini write you should store your WinSCP settings in INI file.
+To do this, open Options - Preferences - Storage, and  set Configuration storage as "Automatic INI file" or "Custom INI file".
+In case Configuration Storage as "Custom INI file", open VSCode settings, and define setting "ansible-server-sites.winscp_ini_path"
 
 ## Extension Settings
 - `ansible-server-sites.json_url` - URL to your generated JSON with site list
 - `ansible-server-sites.json_cache_time` - cache time JSON data, in seconds
+- `ansible-server-sites.winscp_ini_path` - path to your WinSCP.ini file
