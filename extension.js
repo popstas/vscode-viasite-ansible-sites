@@ -155,7 +155,7 @@ async function commandSiteConfigs(){
     };
 
     let winscpConfig = '[Sessions\\' + site.domain + ']\n' +
-    'HostName=' + site.domain + '\n' +
+    'HostName=' + site.host + '\n' +
     'UserName=' + site.user + '\n' +
     'LocalDirectory=C:\n' +
     'RemoteDirectory=' + site.site_root;
@@ -202,7 +202,7 @@ async function commandSiteConfigs(){
     // winscp.ini
     if(process.platform == 'win32'){
         const config = vscode.workspace.getConfiguration('ansible-server-sites');
-        const winscpIniPath = config.get('winscp_ini_path', process.env.APPDATA + '/winscp.ini');
+        const winscpIniPath = config.get('winscp_ini_path') || process.env.APPDATA + '\\winscp.ini';
         if(fs.existsSync(winscpIniPath)){
             answer = await vscode.window.showInformationMessage('Write winscp.ini?', {
                 title: 'Yes',
@@ -219,7 +219,7 @@ async function commandSiteConfigs(){
                 }
             }
         } else {
-            vscode.window.showErrorMessage('%APPDATA%\\winscp.ini not found, open Options - Preferences - Storage - set Configuration storage - Automatic INI file')
+            vscode.window.showErrorMessage(winscpIniPath + ' not found, open Options - Preferences - Storage - set Configuration storage - Automatic or Custom INI file')
         }
     }
 }
