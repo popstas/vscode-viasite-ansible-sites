@@ -47,8 +47,7 @@ async function commandSiteSSH(){
     let sites = await getSites();
     let site = await selectSite(sites);
     //console.log('site for SSH after selectSite: ', site);
-    let domain = site.domain;
-    let terminal = vscode.window.createTerminal(domain);
+    let terminal = vscode.window.createTerminal(site.domain);
     //console.log('Executing: ', site.ssh_command);
     terminal.sendText(site.ssh_command);
     terminal.show();
@@ -129,10 +128,12 @@ async function commandSiteConfigs(){
         return false;
     }
 
+    let sessionName = site.user + '@' + site.host;
+
     //console.log('matched one site');
     let sftpData = {
-        "name": site.domain,
-        "host": site.domain,
+        "name": sessionName,
+        "host": site.host,
         "port": 22,
         "type": "sftp",
         "username": site.user,
@@ -154,7 +155,7 @@ async function commandSiteConfigs(){
         "localSourceRoot": "${workspaceRoot}"
     };
 
-    let winscpConfig = '[Sessions\\' + site.domain + ']\n' +
+    let winscpConfig = '[Sessions\\' + sessionName + ']\n' +
     'HostName=' + site.host + '\n' +
     'UserName=' + site.user + '\n' +
     'LocalDirectory=C:\n' +
