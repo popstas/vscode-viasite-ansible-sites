@@ -155,7 +155,7 @@ async function commandSiteConfigs(){
     };
 
     let winscpConfig = '[Sessions\\' + site.domain + ']\n' +
-    'HostName=' + site.domain + '\n' +
+    'HostName=' + site.host + '\n' +
     'UserName=' + site.user + '\n' +
     'LocalDirectory=C:\n' +
     'RemoteDirectory=' + site.site_root;
