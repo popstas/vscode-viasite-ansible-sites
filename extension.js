@@ -9,11 +9,11 @@ const path = require('path');
 const os = require('os');
 const punycode = require('punycode');
 let sitesCache = {
-    time: 0,
-    sites: []
+  time: 0,
+  sites: []
 };
 let globalContext;
-const cacheJsonPath = vscode.workspace.rootPath + '/.vscode/.ansible-site';
+const cacheJsonPath = getSettingsDirectory() + '/.ansible-site';
 // const ftpConfigPath = getConfigPath('ftp-simple.json');
 
 // function getConfigPath(filename){
@@ -29,200 +29,313 @@ const cacheJsonPath = vscode.workspace.rootPath + '/.vscode/.ansible-site';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
-    //console.log('ansible-server-sites start')
-    let subscriptions = [];
-    globalContext = context;
+  //console.log('ansible-server-sites start')
+  let subscriptions = [];
+  globalContext = context;
 
-    subscriptions.push(vscode.commands.registerCommand('ansible-server-sites.site-ssh', commandSiteSSH));
-    subscriptions.push(vscode.commands.registerCommand('ansible-server-sites.site-clone', commandGitClone));
-    subscriptions.push(vscode.commands.registerCommand('ansible-server-sites.site-configs', commandSiteConfigs));
+  subscriptions.push(
+    vscode.commands.registerCommand('ansible-server-sites.site-ssh', commandSiteSSH)
+  );
+  subscriptions.push(
+    vscode.commands.registerCommand('ansible-server-sites.site-clone', commandGitClone)
+  );
+  subscriptions.push(
+    vscode.commands.registerCommand('ansible-server-sites.site-configs', commandSiteConfigs)
+  );
 
-    for(let i=0; i<subscriptions.length; i++){
-        context.subscriptions.push(subscriptions[i]);
-    }
+  for (let i = 0; i < subscriptions.length; i++) {
+    context.subscriptions.push(subscriptions[i]);
+  }
 }
 exports.activate = activate;
 
-async function commandSiteSSH(){
-    let sites = await getSites();
-    let site = await selectSite(sites);
-    //console.log('site for SSH after selectSite: ', site);
-    let terminal = vscode.window.createTerminal(site.domain);
-    //console.log('Executing: ', site.ssh_command);
-    terminal.sendText(site.ssh_command);
-    terminal.show();
+async function commandSiteSSH() {
+  let sites = await getSites();
+  let site = await selectSite(sites);
+  //console.log('site for SSH after selectSite: ', site);
+  let terminal = vscode.window.createTerminal(site.domain);
+  //console.log('Executing: ', site.ssh_command);
+  terminal.sendText(site.ssh_command);
+  terminal.show();
 }
 
-async function commandGitClone(){
-    let sites = await getSites();
-    let site = await selectSite(sites);
+async function commandGitClone() {
+  let sites = await getSites();
+  let site = await selectSite(sites);
 
-    //console.log('site after selectSite: ', site);
-    //console.log(site.git_clone_url);
+  //console.log('site after selectSite: ', site);
+  //console.log(site.git_clone_url);
 
-    let url = await vscode.window.showInputBox({
-        value: site.git_clone_url,
-        prompt: "Repository URL",
-        ignoreFocusOut: true
-    });
+  let url = await vscode.window.showInputBox({
+    value: site.git_clone_url,
+    prompt: 'Repository URL',
+    ignoreFocusOut: true
+  });
 
-    const config = vscode.workspace.getConfiguration('git');
-    const value = config.get('defaultCloneDirectory') || process.HOMEPATH;
-    const parentPath = await vscode.window.showInputBox({
-        prompt: "Parent Directory",
-        value,
-        ignoreFocusOut: true
-    });
-    let name = path.basename(site.site_root)
-    let clone_path = parentPath + path.sep + name;
-    clone_path = clone_path.split('\\').join('/');
-    //console.log('clone_path', clone_path);
+  const config = vscode.workspace.getConfiguration('git');
+  const value = config.get('defaultCloneDirectory') || process.HOMEPATH;
+  const parentPath = await vscode.window.showInputBox({
+    prompt: 'Parent Directory',
+    value,
+    ignoreFocusOut: true
+  });
+  let name = path.basename(site.site_root);
+  let clone_path = parentPath + path.sep + name;
+  clone_path = clone_path.split('\\').join('/');
+  //console.log('clone_path', clone_path);
 
-    // Open project in new window
-    if(fs.existsSync(clone_path)){
-        vscode.window.showInformationMessage(name + ' exists at ' + parentPath + ', opening in new window');
-        let uri = vscode.Uri.parse('file:///' + clone_path);
-        vscode.commands.executeCommand('vscode.openFolder', uri, true);
-        return false;
-    }
+  // Open project in new window
+  if (fs.existsSync(clone_path)) {
+    vscode.window.showInformationMessage(
+      name + ' exists at ' + parentPath + ', opening in new window'
+    );
+    let uri = vscode.Uri.parse('file:///' + clone_path);
+    vscode.commands.executeCommand('vscode.openFolder', uri, true);
+    return false;
+  }
 
-    // clone terminal command
-    let terminal = vscode.window.createTerminal();
-    let sshCommand = 'git clone ' + url + ' ' + clone_path;
-    terminal.sendText(sshCommand);
-    terminal.show();
+  // clone terminal command
+  let terminal = vscode.window.createTerminal();
+  let sshCommand = 'git clone ' + url + ' ' + clone_path;
+  terminal.sendText(sshCommand);
+  terminal.show();
 
-    // this.git.clone(url, parentPath);
-    // try {
-    //     vscode.window.withProgress({ location: ProgressLocation.SourceControl, title: "Cloning git repository..." }, () => clonePromise);
-    //     vscode.window.withProgress({ location: ProgressLocation.Window, title: "Cloning git repository..." }, () => clonePromise);
+  // this.git.clone(url, parentPath);
+  // try {
+  //     vscode.window.withProgress({ location: ProgressLocation.SourceControl, title: "Cloning git repository..." }, () => clonePromise);
+  //     vscode.window.withProgress({ location: ProgressLocation.Window, title: "Cloning git repository..." }, () => clonePromise);
 
-    //     const repositoryPath = clonePromise;
+  //     const repositoryPath = clonePromise;
 
-    //     const open = "Open Repository";
-    //     const result = vscode.window.showInformationMessage("Would you like to open the cloned repository?", open);
+  //     const open = "Open Repository";
+  //     const result = vscode.window.showInformationMessage("Would you like to open the cloned repository?", open);
 
-    //     const openFolder = result === open;
-    //     if (openFolder) {
-    //         commands.executeCommand('vscode.openFolder', Uri.file(repositoryPath));
-    //     }
-    // } catch (err) {
-    //     throw err;
-    // }
+  //     const openFolder = result === open;
+  //     if (openFolder) {
+  //         commands.executeCommand('vscode.openFolder', Uri.file(repositoryPath));
+  //     }
+  // } catch (err) {
+  //     throw err;
+  // }
 }
 
-async function commandSiteConfigs(){
-    let sites = await getSites();
-    let site = await selectSite(sites);
-    if(vscode.workspace.rootPath){
-        try{
-            fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
-        } catch(err){
-            vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
-        }
+function createSettingsDirectory() {
+  let path = getSettingsDirectory();
+  if(!fs.existsSync(path)) fs.mkdirSync(path);
+}
+
+function getSettingsDirectory() {
+  return vscode.workspace.rootPath + '/.vscode';
+}
+
+async function commandSiteConfigs() {
+  let sites = await getSites();
+  let site = await selectSite(sites);
+
+  //console.log('site: ', site);
+
+  if (!site) {
+    return false;
+  }
+
+  let answer = await vscode.window.showInformationMessage(
+    'Bind current project to ' + site.domain + '?',
+    {
+      title: 'Yes',
+      id: 'ansible-server-bind-site'
+    },
+    {
+      title: 'No',
+      id: 'No'
     }
-
-    //console.log('site: ', site);
-
-    if(!site){
-        return false;
+  );
+  if (answer && answer.id == 'ansible-server-bind-site') {
+    try {
+      fs.mkdirSync();
+      fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
+    } catch (err) {
+      vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
     }
+  }
 
-    let sessionName = site.user + '@' + site.host;
+  let sessionName = site.user + '@' + site.host;
 
-    //console.log('matched one site');
-    let sftpData = {
-        "name": sessionName,
-        "host": site.host,
-        "port": 22,
-        "type": "sftp",
-        "username": site.user,
-        "password": "asd",
-        "path": "/",
-        "agent": "pageant",
-        "autosave": true,
-        "confirm": true,
-        "project": {}
-    };
-    sftpData.project[vscode.workspace.rootPath] = site.site_root;
+  //console.log('matched one site');
+  let sftpData = {
+    name: sessionName,
+    host: site.host,
+    port: 22,
+    type: 'sftp',
+    username: site.user,
+    password: 'asd',
+    path: '/',
+    agent: 'pageant',
+    autosave: true,
+    confirm: true,
+    project: {}
+  };
+  sftpData.project[vscode.workspace.rootPath] = site.site_root;
 
-    let debugData = {
-        "name": "Listen for XDebug",
-        "type": "php",
-        "request": "launch",
-        "port": 9000,
-        "serverSourceRoot": site.site_root,
-        "localSourceRoot": "${workspaceRoot}"
-    };
+  let debugData = {
+    name: 'Listen for XDebug',
+    type: 'php',
+    request: 'launch',
+    port: 9000,
+    serverSourceRoot: site.site_root,
+    localSourceRoot: '${workspaceRoot}'
+  };
 
-    let winscpConfig = '[Sessions\\' + sessionName + ']\n' +
-    'HostName=' + site.host + '\n' +
-    'UserName=' + site.user + '\n' +
+  let winscpConfig =
+    '[Sessions\\' +
+    sessionName +
+    ']\n' +
+    'HostName=' +
+    site.host +
+    '\n' +
+    'UserName=' +
+    site.user +
+    '\n' +
     'LocalDirectory=C:\n' +
-    'RemoteDirectory=' + site.site_root;
+    'RemoteDirectory=' +
+    site.site_root;
 
-    //sftpConfig.push(sftpData);
-    //console.log(sftpConfig);
-    let doc = await vscode.workspace.openTextDocument(vscode.Uri.file('project-config.md').with({ scheme: 'untitled' }));
-    let msg = '# Insert to your `ftp-simple.json`:\n\n' + '``` json\n,' + JSON.stringify(sftpData, null, '\t') + '\n```';
-    msg = msg + '\n\n # Insert to your `configurations` of `launch.json`:\n\n' + '``` json\n' + JSON.stringify(debugData, null, '\t') + '\n```';
-    if(process.platform == 'win32'){
-        msg = msg + '\n\n # Insert to your `WinSCP.ini`:\n\n' + '``` ini\n' + winscpConfig + '\n```';
+  let deployConfig = {
+    packages: [
+      {
+        name: site.domain,
+        deployOnSave: true,
+        fastCheckOnSave: true,
+        targets: ['sftp'],
+        files: ['**/*']
+      }
+    ],
+    targets: [
+      {
+        type: 'sftp',
+        name: 'sftp',
+        dir: site.site_root,
+        host: site.host,
+        agent: 'pageant',
+        user: site.user,
+        password: '...'
+      }
+    ]
+  };
+
+  //sftpConfig.push(sftpData);
+  //console.log(sftpConfig);
+  let doc = await vscode.workspace.openTextDocument(
+    vscode.Uri.file('project-config.md').with({ scheme: 'untitled' })
+  );
+  let msg =
+    '# Insert to your `ftp-simple.json`:\n\n' +
+    '``` json\n,' +
+    JSON.stringify(sftpData, null, '\t') +
+    '\n```';
+  msg =
+    msg +
+    '\n\n # Insert to your `configurations` of `launch.json`:\n\n' +
+    '``` json\n' +
+    JSON.stringify(debugData, null, '\t') +
+    '\n```';
+  if (process.platform == 'win32') {
+    msg = msg + '\n\n # Insert to your `WinSCP.ini`:\n\n' + '``` ini\n' + winscpConfig + '\n```';
+  }
+  vscode.window.showTextDocument(doc);
+  const edit = new vscode.WorkspaceEdit();
+  edit.insert(doc.uri, new vscode.Position(0, 0), msg);
+  vscode.workspace.applyEdit(edit);
+
+  answer = await vscode.window.showInformationMessage(
+    'Write deploy reloaded config to workspace settings?',
+    {
+      title: 'Yes',
+      id: 'ansible-server-deploy-config'
+    },
+    {
+      title: 'No',
+      id: 'No'
     }
-    vscode.window.showTextDocument(doc);
-    const edit = new vscode.WorkspaceEdit();
-    edit.insert(doc.uri, new vscode.Position(0, 0), msg);
-    vscode.workspace.applyEdit(edit);
-
-    // ftp-simple.json
-    let answer = await vscode.window.showInformationMessage('Open ftp-simple.json?', {
-        title: 'Yes',
-        id: 'ansible-server-open-sftp'
-    }, {
-        title: 'No',
-        id: 'No'
-    });
-    if(answer && answer.id == 'ansible-server-open-sftp'){
-        //console.log('open sftp config');
-        vscode.commands.executeCommand('ftp.config');
+  );
+  if (answer && answer.id == 'ansible-server-deploy-config') {
+    let settingsPath = getSettingsDirectory() + '/settings.json';
+    try {
+      createSettingsDirectory();
+      let settings = {};
+      if(fs.existsSync(settingsPath)){
+        settings = JSON.parse(fs.readFileSync(settingsPath));
+      }
+      settings['deploy.reloaded'] = deployConfig;
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, '\t'));
+    } catch (err) {
+      vscode.window.showErrorMessage('Unable to write to ' + settingsPath);
     }
+  }
 
-    // launch.json
-    answer = await vscode.window.showInformationMessage('Open launch.json?', {
-        title: 'Yes',
-        id: 'ansible-server-open-launch'
-    }, {
-        title: 'No',
-        id: 'No'
-    });
-    if(answer && answer.id == 'ansible-server-open-launch'){
-        vscode.commands.executeCommand('debug.addConfiguration');
-        vscode.commands.executeCommand('workbench.action.debug.configure');
+  // ftp-simple.json
+  answer = await vscode.window.showInformationMessage(
+    'Open ftp-simple.json?',
+    {
+      title: 'Yes',
+      id: 'ansible-server-open-sftp'
+    },
+    {
+      title: 'No',
+      id: 'No'
     }
+  );
+  if (answer && answer.id == 'ansible-server-open-sftp') {
+    //console.log('open sftp config');
+    vscode.commands.executeCommand('ftp.config');
+  }
 
-    // winscp.ini
-    if(process.platform == 'win32'){
-        const config = vscode.workspace.getConfiguration('ansible-server-sites');
-        const winscpIniPath = config.get('winscp_ini_path') || process.env.APPDATA + '\\winscp.ini';
-        if(fs.existsSync(winscpIniPath)){
-            answer = await vscode.window.showInformationMessage('Write winscp.ini?', {
-                title: 'Yes',
-                id: 'ansible-server-write-winscp'
-            }, {
-                title: 'No',
-                id: 'No'
-            });
-            if(answer && answer.id == 'ansible-server-write-winscp'){
-                try{
-                    fs.appendFileSync(winscpIniPath, '\n\n' + winscpConfig);
-                } catch(err){
-                    vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
-                }
-            }
-        } else {
-            vscode.window.showErrorMessage(winscpIniPath + ' not found, open Options - Preferences - Storage - set Configuration storage - Automatic or Custom INI file')
+  // launch.json
+  answer = await vscode.window.showInformationMessage(
+    'Open launch.json?',
+    {
+      title: 'Yes',
+      id: 'ansible-server-open-launch'
+    },
+    {
+      title: 'No',
+      id: 'No'
+    }
+  );
+  if (answer && answer.id == 'ansible-server-open-launch') {
+    vscode.commands.executeCommand('debug.addConfiguration');
+    vscode.commands.executeCommand('workbench.action.debug.configure');
+  }
+
+  // winscp.ini
+  if (process.platform == 'win32') {
+    const config = vscode.workspace.getConfiguration('ansible-server-sites');
+    const winscpIniPath = config.get('winscp_ini_path') || process.env.APPDATA + '\\winscp.ini';
+    if (fs.existsSync(winscpIniPath)) {
+      answer = await vscode.window.showInformationMessage(
+        'Write winscp.ini?',
+        {
+          title: 'Yes',
+          id: 'ansible-server-write-winscp'
+        },
+        {
+          title: 'No',
+          id: 'No'
         }
+      );
+      if (answer && answer.id == 'ansible-server-write-winscp') {
+        try {
+          fs.appendFileSync(winscpIniPath, '\n\n' + winscpConfig);
+        } catch (err) {
+          vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
+        }
+      }
+    } else {
+      vscode.window.showErrorMessage(
+        winscpIniPath +
+          ' not found, open Options - Preferences - Storage - set Configuration storage - Automatic or Custom INI file'
+      );
     }
+  }
 }
 
 // function loadSimpleFtpConfig(){
@@ -241,73 +354,72 @@ async function commandSiteConfigs(){
 //     jsonRaw = fs.writeFileSync(ftpConfigPath, jsonRaw);
 // }
 
-function selectSite(sites){
-    let options = sites.map(function(site){
-        return {
-            label: punycode.toUnicode(site.domain),
-            description: site.host + (site.group ? ' / ' + site.group : ''),
-        };
+function selectSite(sites) {
+  let options = sites.map(function(site) {
+    return {
+      label: punycode.toUnicode(site.domain),
+      description: site.host + (site.group ? ' / ' + site.group : '')
+    };
+  });
+
+  let promise = new Promise((resolve, reject) => {
+    if (vscode.workspace.rootPath && fs.existsSync(cacheJsonPath)) {
+      let jsonRaw = fs.readFileSync(cacheJsonPath).toString();
+      let site = JSON.parse(jsonRaw);
+      resolve(site);
+      return;
+    }
+
+    let p = vscode.window.showQuickPick(options, { placeHolder: 'domain' });
+    p.then(function(val) {
+      //console.log('selected: ', val);
+      if (val === undefined) {
+        return 'Nothing selected';
+      }
+
+      let ind = options.indexOf(val);
+      let site = sites[ind];
+      resolve(site);
     });
-
-    let promise = new Promise((resolve, reject) => {
-        if(vscode.workspace.rootPath && fs.existsSync(cacheJsonPath)){
-            let jsonRaw = fs.readFileSync(cacheJsonPath).toString();
-            let site = JSON.parse(jsonRaw);
-            resolve(site);
-            return;
-        }
-
-        let p = vscode.window.showQuickPick(options, {placeHolder:'domain'});
-        p.then(function(val){
-            //console.log('selected: ', val);
-            if(val === undefined){
-                return 'Nothing selected';
-            }
-
-            let ind = options.indexOf(val);
-            let site = sites[ind];
-            resolve(site);
-        });
-    });
-    return promise;
+  });
+  return promise;
 }
 
 // this method is called when your extension is deactivated
-function deactivate() {
-}
+function deactivate() {}
 exports.deactivate = deactivate;
 
-function getSites(){
-    const config = vscode.workspace.getConfiguration('ansible-server-sites');
-    const cacheTime = config.get('json_cache_time', 300);
-    return new Promise((resolve, reject) => {
-        // cache
-        if(sitesCache.sites.length > 0){
-            let cacheAgeSeconds = (new Date().getTime() - sitesCache.time.getTime()) / 1000;
-            // console.log('cache age: ' + cacheAgeSeconds);
-            if(cacheAgeSeconds < cacheTime){
-                // console.log('resolve sites from runtime cache');
-                resolve(sitesCache.sites);
-                return;
-            }
-        }
+function getSites() {
+  const config = vscode.workspace.getConfiguration('ansible-server-sites');
+  const cacheTime = config.get('json_cache_time', 300);
+  return new Promise((resolve, reject) => {
+    // cache
+    if (sitesCache.sites.length > 0) {
+      let cacheAgeSeconds = (new Date().getTime() - sitesCache.time.getTime()) / 1000;
+      // console.log('cache age: ' + cacheAgeSeconds);
+      if (cacheAgeSeconds < cacheTime) {
+        // console.log('resolve sites from runtime cache');
+        resolve(sitesCache.sites);
+        return;
+      }
+    }
 
-        // fetch
-        // console.log('resolve sites from url...')
-        const url = config.get('json_url');
-        fetch(url)
-            .then(response => {
-                if(response.status != 200){
-                    throw new Error('Failed to fetch ' + url + ', status ' + response.status);
-                }
-                return response.json();
-            })
-            .then(json => {
-                sitesCache.sites = json.sites;
-                sitesCache.time = new Date()
-                // console.log('store global cache');
-                resolve(sitesCache.sites);
-            })
-            .catch(err => console.error(err));
-    });
+    // fetch
+    // console.log('resolve sites from url...')
+    const url = config.get('json_url');
+    fetch(url)
+      .then(response => {
+        if (response.status != 200) {
+          throw new Error('Failed to fetch ' + url + ', status ' + response.status);
+        }
+        return response.json();
+      })
+      .then(json => {
+        sitesCache.sites = json.sites;
+        sitesCache.time = new Date();
+        // console.log('store global cache');
+        resolve(sitesCache.sites);
+      })
+      .catch(err => console.error(err));
+  });
 }
