@@ -291,19 +291,32 @@ async function commandSiteConfigs() {
 
   // launch.json
   answer = await vscode.window.showInformationMessage(
-    'Open launch.json?',
+    'Write xdebug configuration to launch.json?',
     {
       title: 'Yes',
-      id: 'ansible-server-open-launch'
+      id: 'ansible-server-xdebug-config'
     },
     {
       title: 'No',
       id: 'No'
     }
   );
-  if (answer && answer.id == 'ansible-server-open-launch') {
-    vscode.commands.executeCommand('debug.addConfiguration');
-    vscode.commands.executeCommand('workbench.action.debug.configure');
+  if (answer && answer.id == 'ansible-server-xdebug-config') {
+    let settingsPath = getSettingsDirectory() + '/launch.json';
+    try {
+      createSettingsDirectory();
+      let settings = {
+        version: "0.2.0",
+        configurations: []
+      };
+      if(fs.existsSync(settingsPath)){
+        settings = JSON.parse(fs.readFileSync(settingsPath));
+      }
+      settings.configurations.push(debugData);
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, '\t'));
+    } catch (err) {
+      vscode.window.showErrorMessage('Unable to write to ' + settingsPath);
+    }
   }
 
   // winscp.ini
