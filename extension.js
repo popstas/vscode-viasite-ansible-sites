@@ -8,33 +8,23 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const punycode = require('punycode');
+const exec = require('child_process').exec;
 let sitesCache = {
   time: 0,
   sites: []
 };
 let globalContext;
 const cacheJsonPath = getSettingsDirectory() + '/.ansible-site';
-// const ftpConfigPath = getConfigPath('ftp-simple.json');
 
-// function getConfigPath(filename){
-//     var folder = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.platform == 'linux' ? process.HOMEPATH + '/.config' : '/var/local');
-//     if(/^[A-Z]\:[/\\]/.test(folder)) folder = folder.substring(0, 1).toLowerCase() + folder.substring(1);
-//     return normalize([folder, "/Code/User/", filename ? filename : ""].join('/'));
-// }
-
-// function normalize(p){
-//     return path.normalize(p).replace(/\\/g, '/');
-// };
-
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 function activate(context) {
-  //console.log('ansible-server-sites start')
   let subscriptions = [];
   globalContext = context;
 
   subscriptions.push(
     vscode.commands.registerCommand('ansible-server-sites.site-ssh', commandSiteSSH)
+  );
+  subscriptions.push(
+    vscode.commands.registerCommand('ansible-server-sites.site-putty', commandSitePuTTY)
   );
   subscriptions.push(
     vscode.commands.registerCommand('ansible-server-sites.site-clone', commandGitClone)
@@ -57,6 +47,15 @@ async function commandSiteSSH() {
   //console.log('Executing: ', site.ssh_command);
   terminal.sendText(site.ssh_command);
   terminal.show();
+}
+
+async function commandSitePuTTY() {
+  const config = vscode.workspace.getConfiguration('ansible-server-sites');
+  let sites = await getSites();
+  let site = await selectSite(sites);
+  let puttyPath = config.get('putty_path')
+  let userHost = site.user + '@' + site.domain;
+  exec(`START ${puttyPath} ${userHost}`);
 }
 
 async function commandGitClone() {

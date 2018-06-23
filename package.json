@@ -12,6 +12,7 @@
     ],
     "activationEvents": [
         "onCommand:ansible-server-sites.site-ssh",
+        "onCommand:ansible-server-sites.site-putty",
         "onCommand:ansible-server-sites.site-clone",
         "onCommand:ansible-server-sites.site-configs",
         "*"
@@ -26,6 +27,10 @@
             {
                 "command": "ansible-server-sites.site-ssh",
                 "title": "ansible-server: SSH to site"
+            },
+            {
+                "command": "ansible-server-sites.site-putty",
+                "title": "ansible-server: PuTTY to site"
             },
             {
                 "command": "ansible-server-sites.site-clone",
@@ -54,6 +59,11 @@
                     "type": "string",
                     "description": "Path to WinSCP.ini file",
                     "default": ""
+                },
+                "ansible-server-sites.putty_path": {
+                    "type": "string",
+                    "description": "Path to putty.exe",
+                    "default": "putty.exe"
                 }
             }
         }
