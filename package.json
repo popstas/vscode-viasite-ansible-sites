@@ -2,7 +2,7 @@
     "name": "ansible-server-sites",
     "displayName": "ansible-server-sites",
     "description": "Operations with sites deployed with viasite-ansible/ansible-server",
-    "version": "0.1.3",
+    "version": "0.2.0",
     "publisher": "popstas",
     "engines": {
         "vscode": "^1.15.0"
@@ -34,7 +34,7 @@
             },
             {
                 "command": "ansible-server-sites.site-clone",
-                "title": "ansible-server: Git clone site"
+                "title": "ansible-server: Git clone site (or open cloned site)"
             },
             {
                 "command": "ansible-server-sites.site-configs",
