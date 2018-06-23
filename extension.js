@@ -121,7 +121,7 @@ async function commandGitClone() {
 
 function createSettingsDirectory() {
   let path = getSettingsDirectory();
-  if(!fs.existsSync(path)) fs.mkdirSync(path);
+  if (!fs.existsSync(path)) fs.mkdirSync(path);
 }
 
 function getSettingsDirectory() {
@@ -132,49 +132,9 @@ async function commandSiteConfigs() {
   let sites = await getSites();
   let site = await selectSite(sites);
 
-  //console.log('site: ', site);
-
   if (!site) {
     return false;
   }
-
-  let answer = await vscode.window.showInformationMessage(
-    'Bind current project to ' + site.domain + '?',
-    {
-      title: 'Yes',
-      id: 'ansible-server-bind-site'
-    },
-    {
-      title: 'No',
-      id: 'No'
-    }
-  );
-  if (answer && answer.id == 'ansible-server-bind-site') {
-    try {
-      fs.mkdirSync();
-      fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
-    } catch (err) {
-      vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
-    }
-  }
-
-  let sessionName = site.user + '@' + site.host;
-
-  //console.log('matched one site');
-  let sftpData = {
-    name: sessionName,
-    host: site.host,
-    port: 22,
-    type: 'sftp',
-    username: site.user,
-    password: 'asd',
-    path: '/',
-    agent: 'pageant',
-    autosave: true,
-    confirm: true,
-    project: {}
-  };
-  sftpData.project[vscode.workspace.rootPath] = site.site_root;
 
   let debugData = {
     name: 'Listen for XDebug',
@@ -185,19 +145,14 @@ async function commandSiteConfigs() {
     localSourceRoot: '${workspaceRoot}'
   };
 
-  let winscpConfig =
-    '[Sessions\\' +
-    sessionName +
-    ']\n' +
-    'HostName=' +
-    site.host +
-    '\n' +
-    'UserName=' +
-    site.user +
-    '\n' +
-    'LocalDirectory=C:\n' +
-    'RemoteDirectory=' +
-    site.site_root;
+  let sessionName = site.user + '@' + site.host;
+
+  let winscpConfig = '';
+  winscpConfig += `[Sessions\\${sessionName}]\n`;
+  winscpConfig += `HostName=${site.host}\n`;
+  winscpConfig += `UserName=${site.user}\n`;
+  winscpConfig += `LocalDirectory=C:\n`;
+  winscpConfig += `RemoteDirectory=${site.site_root}`;
 
   let deployConfig = {
     packages: [
@@ -222,30 +177,32 @@ async function commandSiteConfigs() {
     ]
   };
 
-  //sftpConfig.push(sftpData);
-  //console.log(sftpConfig);
-  let doc = await vscode.workspace.openTextDocument(
-    vscode.Uri.file('project-config.md').with({ scheme: 'untitled' })
-  );
-  let msg =
-    '# Insert to your `ftp-simple.json`:\n\n' +
-    '``` json\n,' +
-    JSON.stringify(sftpData, null, '\t') +
-    '\n```';
-  msg =
-    msg +
-    '\n\n # Insert to your `configurations` of `launch.json`:\n\n' +
-    '``` json\n' +
-    JSON.stringify(debugData, null, '\t') +
-    '\n```';
-  if (process.platform == 'win32') {
-    msg = msg + '\n\n # Insert to your `WinSCP.ini`:\n\n' + '``` ini\n' + winscpConfig + '\n```';
-  }
-  vscode.window.showTextDocument(doc);
-  const edit = new vscode.WorkspaceEdit();
-  edit.insert(doc.uri, new vscode.Position(0, 0), msg);
-  vscode.workspace.applyEdit(edit);
+  let answer;
 
+  // .ansible-site
+  if(!fs.existsSync(cacheJsonPath)){
+    answer = await vscode.window.showInformationMessage(
+      'Bind current project to ' + site.domain + '?',
+      {
+        title: 'Yes',
+        id: 'ansible-server-bind-site'
+      },
+      {
+        title: 'No',
+        id: 'No'
+      }
+    );
+    if (answer && answer.id == 'ansible-server-bind-site') {
+      try {
+        createSettingsDirectory();
+        fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
+      } catch (err) {
+        vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
+      }
+    }
+  }
+
+  // deploy reloaded
   answer = await vscode.window.showInformationMessage(
     'Write deploy reloaded config to workspace settings?',
     {
@@ -262,7 +219,7 @@ async function commandSiteConfigs() {
     try {
       createSettingsDirectory();
       let settings = {};
-      if(fs.existsSync(settingsPath)){
+      if (fs.existsSync(settingsPath)) {
         settings = JSON.parse(fs.readFileSync(settingsPath));
       }
       settings['deploy.reloaded'] = deployConfig;
@@ -270,23 +227,6 @@ async function commandSiteConfigs() {
     } catch (err) {
       vscode.window.showErrorMessage('Unable to write to ' + settingsPath);
     }
-  }
-
-  // ftp-simple.json
-  answer = await vscode.window.showInformationMessage(
-    'Open ftp-simple.json?',
-    {
-      title: 'Yes',
-      id: 'ansible-server-open-sftp'
-    },
-    {
-      title: 'No',
-      id: 'No'
-    }
-  );
-  if (answer && answer.id == 'ansible-server-open-sftp') {
-    //console.log('open sftp config');
-    vscode.commands.executeCommand('ftp.config');
   }
 
   // launch.json
@@ -306,10 +246,10 @@ async function commandSiteConfigs() {
     try {
       createSettingsDirectory();
       let settings = {
-        version: "0.2.0",
+        version: '0.2.0',
         configurations: []
       };
-      if(fs.existsSync(settingsPath)){
+      if (fs.existsSync(settingsPath)) {
         settings = JSON.parse(fs.readFileSync(settingsPath));
       }
       settings.configurations.push(debugData);
@@ -350,22 +290,6 @@ async function commandSiteConfigs() {
     }
   }
 }
-
-// function loadSimpleFtpConfig(){
-//     console.log('loadSimpleFtpConfig');
-//     console.log(ftpConfigPath);
-//     jsonRaw = fs.readFileSync(ftpConfigPath).toString();
-//     console.log(jsonRaw);
-//     json = JSON.parse(jsonRaw);
-//     return json;
-// }
-
-// function saveSimpleFtpConfig(configData){
-//     jsonRaw = JSON.stringify(configData, null, '\t');
-//     console.log('save json:', jsonRaw);
-//     //fs.writeFileSync(ftpConfigPath, cryptoUtil.encrypt(jsonRaw));
-//     jsonRaw = fs.writeFileSync(ftpConfigPath, jsonRaw);
-// }
 
 function selectSite(sites) {
   let options = sites.map(function(site) {
