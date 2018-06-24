@@ -24,6 +24,9 @@ function activate(context) {
     vscode.commands.registerCommand('ansible-server-sites.site-ssh', commandSiteSSH)
   );
   subscriptions.push(
+    vscode.commands.registerCommand('ansible-server-sites.ssh-tunnel', commandSSHTunnel)
+  );
+  subscriptions.push(
     vscode.commands.registerCommand('ansible-server-sites.site-putty', commandSitePuTTY)
   );
   subscriptions.push(
@@ -42,10 +45,16 @@ exports.activate = activate;
 async function commandSiteSSH() {
   let sites = await getSites();
   let site = await selectSite(sites);
-  //console.log('site for SSH after selectSite: ', site);
   let terminal = vscode.window.createTerminal(site.domain);
-  //console.log('Executing: ', site.ssh_command);
   terminal.sendText(site.ssh_command);
+  terminal.show();
+}
+
+async function commandSSHTunnel(){
+  let sites = await getSites();
+  let site = await selectSite(sites);
+  let terminal = vscode.window.createTerminal(site.domain + 'SSH tunnel');
+  terminal.sendText(site.ssh_command + ' -R 9000:localhost:9000');
   terminal.show();
 }
 

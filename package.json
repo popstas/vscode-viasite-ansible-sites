@@ -2,7 +2,7 @@
     "name": "ansible-server-sites",
     "displayName": "ansible-server-sites",
     "description": "Operations with sites deployed with viasite-ansible/ansible-server",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "publisher": "popstas",
     "engines": {
         "vscode": "^1.15.0"
@@ -27,6 +27,10 @@
             {
                 "command": "ansible-server-sites.site-ssh",
                 "title": "ansible-server: SSH to site"
+            },
+            {
+                "command": "ansible-server-sites.ssh-tunnel",
+                "title": "ansible-server: Open SSH tunnel for xdebug"
             },
             {
                 "command": "ansible-server-sites.site-putty",
@@ -70,7 +74,8 @@
     },
     "scripts": {
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "release": "node ./node_modules/vsce/out/vsce publish -p $VSCODE_TOKEN"
+        "release": "node ./node_modules/vsce/out/vsce publish",
+        "prerelease": "node ./node_modules/vsce/out/vsce login popstas"
     },
     "devDependencies": {
         "@types/node": "^7.0.56",
