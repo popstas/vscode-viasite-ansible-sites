@@ -1,3 +1,61 @@
+<a name="0.4.2"></a>
+## [0.4.2](https://github.com/viasite/vscode-viasite-ansible-sites/compare/0.4.1...0.4.2) (2018-06-24)
+
+
+### Bug Fixes
+
+* release scripts ([6bfb1d1](https://github.com/viasite/vscode-viasite-ansible-sites/commit/6bfb1d1))
+
+
+
+<a name="0.4.1"></a>
+## [0.4.1](https://github.com/viasite/vscode-viasite-ansible-sites/compare/0.4.0...0.4.1) (2018-06-24)
+
+
+### Bug Fixes
+
+* remove prerelease (for travis) ([7218316](https://github.com/viasite/vscode-viasite-ansible-sites/commit/7218316))
+
+
+
+<a name="0.4.0"></a>
+# [0.4.0](https://github.com/viasite/vscode-viasite-ansible-sites/compare/0.3.0...0.4.0) (2018-06-24)
+
+
+### Features
+
+* open WinSCP to site ([892eda5](https://github.com/viasite/vscode-viasite-ansible-sites/commit/892eda5))
+
+
+
+<a name="0.3.0"></a>
+# [0.3.0](https://github.com/viasite/vscode-viasite-ansible-sites/compare/0.2.0...0.3.0) (2018-06-24)
+
+
+### Features
+
+* ssh tunnel command ([2ac6e73](https://github.com/viasite/vscode-viasite-ansible-sites/commit/2ac6e73))
+
+
+
+<a name="0.2.0"></a>
+# [0.2.0](https://github.com/viasite/vscode-viasite-ansible-sites/compare/0.1.3...0.2.0) (2018-06-23)
+
+
+### Bug Fixes
+
+* remove ftp-simple and temp document with configs ([f1a5072](https://github.com/viasite/vscode-viasite-ansible-sites/commit/f1a5072))
+* rename git clone command ([3da50ed](https://github.com/viasite/vscode-viasite-ansible-sites/commit/3da50ed))
+
+
+### Features
+
+* deploy reloaded config ([46b4a14](https://github.com/viasite/vscode-viasite-ansible-sites/commit/46b4a14))
+* open PuTTY ([eb56dea](https://github.com/viasite/vscode-viasite-ansible-sites/commit/eb56dea))
+* write xdebug config to launch.json ([2044177](https://github.com/viasite/vscode-viasite-ansible-sites/commit/2044177))
+
+
+
 <a name="0.1.3"></a>
 ## [0.1.3](https://github.com/viasite/vscode-viasite-ansible-sites/compare/0.1.2...0.1.3) (2018-03-18)
 
