@@ -82,11 +82,17 @@
         }
     },
     "scripts": {
+        "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "release": "node ./node_modules/vsce/out/vsce publish -p $VSCODE_TOKEN"
+        "release-vscode": "node ./node_modules/vsce/out/vsce publish -p $VSCODE_TOKEN",
+        "release-github": "conventional-github-releaser -p angular && bash scripts/deploy.sh",
+        "version": "npm run changelog && git add CHANGELOG.md",
+        "postversion": "git push"
     },
     "devDependencies": {
         "@types/node": "^7.0.56",
+        "conventional-changelog-cli": "^2.0.0",
+        "conventional-github-releaser": "^3.1.0",
         "vsce": "^1.37.5",
         "vscode": "^1.1.5"
     },
