@@ -85,9 +85,9 @@
         "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "release-vscode": "node ./node_modules/vsce/out/vsce publish -p $VSCODE_TOKEN",
-        "release-github": "conventional-github-releaser -p angular && bash scripts/deploy.sh",
+        "release-github": "conventional-github-releaser -p angular",
         "version": "npm run changelog && git add CHANGELOG.md",
-        "postversion": "git push"
+        "postversion": "git push --tags && npm run release-github"
     },
     "devDependencies": {
         "@types/node": "^7.0.56",
