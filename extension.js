@@ -27,6 +27,9 @@ function activate(context) {
     vscode.commands.registerCommand('ansible-server-sites.ssh-tunnel', commandSSHTunnel)
   );
   subscriptions.push(
+    vscode.commands.registerCommand('ansible-server-sites.winscp', commandSiteWinSCP)
+  );
+  subscriptions.push(
     vscode.commands.registerCommand('ansible-server-sites.site-putty', commandSitePuTTY)
   );
   subscriptions.push(
@@ -56,6 +59,15 @@ async function commandSSHTunnel(){
   let terminal = vscode.window.createTerminal(site.domain + 'SSH tunnel');
   terminal.sendText(site.ssh_command + ' -R 9000:localhost:9000');
   terminal.show();
+}
+
+async function commandSiteWinSCP() {
+  const config = vscode.workspace.getConfiguration('ansible-server-sites');
+  let sites = await getSites();
+  let site = await selectSite(sites);
+  let winscpPath = config.get('winscp_path')
+  let userHost = site.user + '@' + site.host;
+  exec(`"${winscpPath}" "${userHost}`);
 }
 
 async function commandSitePuTTY() {

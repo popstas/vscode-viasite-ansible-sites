@@ -2,7 +2,7 @@
     "name": "ansible-server-sites",
     "displayName": "ansible-server-sites",
     "description": "Operations with sites deployed with viasite-ansible/ansible-server",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "publisher": "popstas",
     "engines": {
         "vscode": "^1.15.0"
@@ -37,6 +37,10 @@
                 "title": "ansible-server: PuTTY to site"
             },
             {
+                "command": "ansible-server-sites.winscp",
+                "title": "ansible-server: WinSCP to site"
+            },
+            {
                 "command": "ansible-server-sites.site-clone",
                 "title": "ansible-server: Git clone site (or open cloned site)"
             },
@@ -68,6 +72,11 @@
                     "type": "string",
                     "description": "Path to putty.exe",
                     "default": "putty.exe"
+                },
+                "ansible-server-sites.winscp_path": {
+                    "type": "string",
+                    "description": "Path to WinSCP.exe",
+                    "default": "C:\\Program Files (x86)\\WinSCP\\WinSCP.exe"
                 }
             }
         }

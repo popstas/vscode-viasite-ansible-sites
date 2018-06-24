@@ -5,6 +5,7 @@ Operations with sites deployed with viasite-ansible/ansible-server
 - Git clone site
 - SSH to site
 - PuTTY to site
+- WinSCP to site
 - Generate xdebug config
 - Generate Deploy Reloaded config
 - Add site to winscp.ini
