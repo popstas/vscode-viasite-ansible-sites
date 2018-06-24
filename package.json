@@ -83,8 +83,7 @@
     },
     "scripts": {
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "release": "node ./node_modules/vsce/out/vsce publish",
-        "prerelease": "node ./node_modules/vsce/out/vsce login popstas"
+        "release": "node ./node_modules/vsce/out/vsce publish -p $VSCODE_TOKEN"
     },
     "devDependencies": {
         "@types/node": "^7.0.56",
