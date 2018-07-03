@@ -99,27 +99,34 @@ async function commandGitClone(site) {
     ignoreFocusOut: true
   });
   let name = path.basename(site.site_root);
-  let clone_path = parentPath + path.sep + name;
-  clone_path = clone_path.split('\\').join('/');
-  //console.log('clone_path', clone_path);
+  let clonePath = parentPath + path.sep + name;
+  clonePath = clonePath.split('\\').join('/');
 
   // Open project in new window
-  if (fs.existsSync(clone_path)) {
+  if (fs.existsSync(clonePath)) {
     vscode.window.showInformationMessage(
       name + ' exists at ' + parentPath + ', opening in new window'
     );
-    let uri = vscode.Uri.parse('file:///' + clone_path);
+    let uri = vscode.Uri.parse('file:///' + clonePath);
     vscode.commands.executeCommand('vscode.openFolder', uri, true);
     return false;
   }
 
   // clone terminal command
   let terminal = vscode.window.createTerminal();
-  let sshCommand = 'git clone ' + url + ' ' + clone_path;
-  let openCommand = 'code ' + clone_path;
+  let sshCommand = 'git clone ' + url + ' ' + clonePath;
+  let openCommand = 'code ' + clonePath;
   terminal.sendText(sshCommand + ' && ' + openCommand);
   terminal.show();
 
+  // wait for project directory appears
+  let interval = setInterval(async function() {
+    if (fs.existsSync(clonePath)) {
+      await commandSiteConfigs(site, clonePath, true);
+      clearInterval(interval);
+      vscode.window.showInformationMessage('Configs created for ' + clonePath);
+    }
+  }, 1000);
   // this.git.clone(url, parentPath);
   // try {
   //     vscode.window.withProgress({ location: ProgressLocation.SourceControl, title: "Cloning git repository..." }, () => clonePromise);
