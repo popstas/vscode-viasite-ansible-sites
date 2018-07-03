@@ -129,15 +129,6 @@ async function commandGitClone(site = null) {
   // }
 }
 
-function createSettingsDirectory() {
-  let path = getSettingsDirectory();
-  if (!fs.existsSync(path)) fs.mkdirSync(path);
-}
-
-function getSettingsDirectory() {
-  return vscode.workspace.rootPath + '/.vscode';
-}
-
 async function commandSiteConfigs(site = null) {
   if (!site) site = await getSites().then(selectSite);
 
@@ -298,6 +289,15 @@ async function commandSiteConfigs(site = null) {
       );
     }
   }
+}
+
+function createSettingsDirectory() {
+  let path = getSettingsDirectory();
+  if (!fs.existsSync(path)) fs.mkdirSync(path);
+}
+
+function getSettingsDirectory() {
+  return vscode.workspace.rootPath + '/.vscode';
 }
 
 function selectSite(sites) {
