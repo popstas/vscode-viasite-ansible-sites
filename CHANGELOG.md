@@ -1,5 +1,16 @@
+<a name="0.4.3"></a>
+## [0.4.3](https://github.com/viasite/vscode-viasite-ansible-sites/compare/v0.4.2...v0.4.3) (2018-07-03)
+
+
+### Bug Fixes
+
+* open project after git clone ([eea3a24](https://github.com/viasite/vscode-viasite-ansible-sites/commit/eea3a24))
+* release github on npm version ([4b6e476](https://github.com/viasite/vscode-viasite-ansible-sites/commit/4b6e476))
+
+
+
 <a name="0.4.2"></a>
-## [0.4.2](https://github.com/viasite/vscode-viasite-ansible-sites/compare/0.4.1...0.4.2) (2018-06-24)
+## [0.4.2](https://github.com/viasite/vscode-viasite-ansible-sites/compare/0.4.1...v0.4.2) (2018-06-24)
 
 
 ### Bug Fixes
