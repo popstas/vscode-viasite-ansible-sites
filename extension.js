@@ -13,7 +13,7 @@ const sitesCache = {
   sites: []
 };
 
-function activate(context) {
+exports.activate = context => {
   const commands = {
     'site-ssh': commandSiteSSH,
     'ssh-tunnel': commandSSHTunnel,
@@ -33,11 +33,12 @@ function activate(context) {
   for (let i = 0; i < subscriptions.length; i++) {
     context.subscriptions.push(subscriptions[i]);
   }
-}
-exports.activate = activate;
+};
+
+exports.deactivate = () => {};
 
 // proxy site command, select site, then call command
-function proxySiteCommand(command, site = null) {
+const proxySiteCommand = (command, site = null) => {
   return async function() {
     // from .ansible-site file
     if (!site) {
@@ -55,35 +56,35 @@ function proxySiteCommand(command, site = null) {
     if (!site) return false;
     return command(site);
   };
-}
+};
 
-async function commandSiteSSH(site) {
+const commandSiteSSH = async site => {
   const terminal = vscode.window.createTerminal(site.domain);
   terminal.sendText(site.ssh_command);
   terminal.show();
-}
+};
 
-async function commandSSHTunnel(site) {
+const commandSSHTunnel = async site => {
   const terminal = vscode.window.createTerminal(site.domain + 'SSH tunnel');
   terminal.sendText(site.ssh_command + ' -R 9000:localhost:9000');
   terminal.show();
-}
+};
 
-async function commandSiteWinSCP(site) {
+const commandSiteWinSCP = async site => {
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
   const winscpPath = config.get('winscp_path');
   const userHost = site.user + '@' + site.host;
   exec(`"${winscpPath}" "${userHost}`);
-}
+};
 
-async function commandSitePuTTY(site) {
+const commandSitePuTTY = async site => {
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
   const puttyPath = config.get('putty_path');
   const userHost = site.user + '@' + site.domain;
   exec(`START ${puttyPath} ${userHost}`);
-}
+};
 
-async function commandGitClone(site) {
+const commandGitClone = async site => {
   const url = await vscode.window.showInputBox({
     value: site.git_clone_url,
     prompt: 'Repository URL',
@@ -143,9 +144,9 @@ async function commandGitClone(site) {
   // } catch (err) {
   //     throw err;
   // }
-}
+};
 
-async function commandSiteConfigs(site, projectRoot = null, yesToAll = false) {
+const commandSiteConfigs = async (site, projectRoot = null, yesToAll = false) => {
   const settingsPath = projectRoot + '/.vscode';
   if (!fs.existsSync(settingsPath)) fs.mkdirSync(settingsPath);
 
@@ -257,9 +258,9 @@ async function commandSiteConfigs(site, projectRoot = null, yesToAll = false) {
       );
     }
   }
-}
+};
 
-async function confirmAction(message) {
+const confirmAction = async message => {
   const answer = await vscode.window.showInformationMessage(
     message,
     {
@@ -272,10 +273,10 @@ async function confirmAction(message) {
     }
   );
   return answer && answer.id == 'Yes';
-}
+};
 
-function selectSite(sites) {
-  const options = sites.map(function(site) {
+const selectSite = sites => {
+  const options = sites.map(site => {
     return {
       label: punycode.toUnicode(site.domain),
       description: site.host + (site.group ? ' / ' + site.group : '')
@@ -295,13 +296,9 @@ function selectSite(sites) {
       resolve(site);
     });
   });
-}
+};
 
-// this method is called when your extension is deactivated
-function deactivate() {}
-exports.deactivate = deactivate;
-
-function getSites() {
+const getSites = () => {
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
   const cacheTime = config.get('json_cache_time', 300);
   return new Promise((resolve, reject) => {
@@ -334,4 +331,4 @@ function getSites() {
       })
       .catch(err => console.error(err));
   });
-}
+};
