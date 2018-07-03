@@ -117,7 +117,8 @@ async function commandGitClone() {
   // clone terminal command
   let terminal = vscode.window.createTerminal();
   let sshCommand = 'git clone ' + url + ' ' + clone_path;
-  terminal.sendText(sshCommand);
+  let openCommand = 'code ' + clone_path;
+  terminal.sendText(sshCommand + ' && ' + openCommand);
   terminal.show();
 
   // this.git.clone(url, parentPath);
