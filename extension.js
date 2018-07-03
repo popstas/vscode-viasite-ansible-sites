@@ -13,7 +13,6 @@ let sitesCache = {
   time: 0,
   sites: []
 };
-const cacheJsonPath = getSettingsDirectory() + '/.ansible-site';
 
 function activate(context) {
   const commands = {
@@ -41,8 +40,20 @@ exports.activate = activate;
 // proxy site command, select site, then call command
 function proxySiteCommand(command, site = null) {
   return async function() {
+    // from .ansible-site file
+    if (!site) {
+      const cacheJsonPath = vscode.workspace.rootPath + '/.ansible-site';
+      if (fs.existsSync(cacheJsonPath)) {
+        const jsonRaw = fs.readFileSync(cacheJsonPath).toString();
+        site = JSON.parse(jsonRaw);
+      }
+    }
+
+    // from select
     if (!site) site = await getSites().then(selectSite);
-    if (!site) return;
+
+    // site not defined
+    if (!site) return false;
     return command(site);
   };
 }
@@ -128,7 +139,10 @@ async function commandGitClone(site) {
   // }
 }
 
-async function commandSiteConfigs(site, yesToAll = false) {
+async function commandSiteConfigs(site, projectRoot = null, yesToAll = false) {
+  const settingsPath = projectRoot + '/.vscode';
+  if (!fs.existsSync(settingsPath)) fs.mkdirSync(settingsPath);
+
   let debugData = {
     name: 'Listen for XDebug',
     type: 'php',
@@ -170,63 +184,65 @@ async function commandSiteConfigs(site, yesToAll = false) {
     ]
   };
 
+  let msg;
+
   // .ansible-site
-  if (!fs.existsSync(cacheJsonPath)) {
-    if (yesToAll || (await confirmAction('Bind current project to ' + site.domain + '?'))) {
-      try {
-        createSettingsDirectory();
-        fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
-      } catch (err) {
-        vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
-      }
+  msg = 'Bind current project to ' + site.domain + '?';
+  if (yesToAll || (!fs.existsSync(cacheJsonPath) && (await confirmAction(msg)))) {
+    let cacheJsonPath = settingsPath + '/.ansible-site';
+    try {
+      fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
+    } catch (err) {
+      vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
     }
   }
 
   // deploy reloaded
-  if (yesToAll || (await confirmAction('Write deploy reloaded config to workspace settings?'))) {
-    let settingsPath = getSettingsDirectory() + '/settings.json';
+  msg = 'Write deploy reloaded config to workspace settings?';
+  if (yesToAll || (await confirmAction(msg))) {
+    let workspaceSettingsPath = settingsPath + '/settings.json';
     try {
-      createSettingsDirectory();
       let settings = {};
-      if (fs.existsSync(settingsPath)) {
-        settings = JSON.parse(fs.readFileSync(settingsPath));
+      if (fs.existsSync(workspaceSettingsPath)) {
+        settings = JSON.parse(fs.readFileSync(workspaceSettingsPath));
       }
       settings['deploy.reloaded'] = deployConfig;
-      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, '\t'));
+      fs.writeFileSync(workspaceSettingsPath, JSON.stringify(settings, null, '\t'));
     } catch (err) {
-      vscode.window.showErrorMessage('Unable to write to ' + settingsPath);
+      vscode.window.showErrorMessage('Unable to write to ' + workspaceSettingsPath);
     }
   }
 
   // launch.json
-  if (yesToAll || (await confirmAction('Write xdebug configuration to launch.json?'))) {
-    let settingsPath = getSettingsDirectory() + '/launch.json';
+  msg = 'Write xdebug configuration to launch.json?';
+  if (yesToAll || (await confirmAction(msg))) {
+    let launchPath = settingsPath + '/launch.json';
     try {
-      createSettingsDirectory();
       let settings = {
         version: '0.2.0',
         configurations: []
       };
-      if (fs.existsSync(settingsPath)) {
-        settings = JSON.parse(fs.readFileSync(settingsPath));
+      if (fs.existsSync(launchPath)) {
+        settings = JSON.parse(fs.readFileSync(launchPath));
       }
       settings.configurations.push(debugData);
-      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, '\t'));
+      fs.writeFileSync(launchPath, JSON.stringify(settings, null, '\t'));
     } catch (err) {
-      vscode.window.showErrorMessage('Unable to write to ' + settingsPath);
+      vscode.window.showErrorMessage('Unable to write to ' + launchPath);
     }
   }
 
   // winscp.ini
+  msg = 'Write winscp.ini?';
   if (process.platform == 'win32') {
     const config = vscode.workspace.getConfiguration('ansible-server-sites');
     const winscpIniPath = config.get('winscp_ini_path') || process.env.APPDATA + '\\winscp.ini';
     if (fs.existsSync(winscpIniPath)) {
-      if (yesToAll || (await confirmAction('Write winscp.ini?'))) {
+      if (yesToAll || (await confirmAction(msg))) {
         try {
           fs.appendFileSync(winscpIniPath, '\n\n' + winscpConfig);
         } catch (err) {
-          vscode.window.showErrorMessage('Unable to write to ' + cacheJsonPath);
+          vscode.window.showErrorMessage('Unable to write to ' + winscpIniPath);
         }
       }
     } else {
@@ -253,15 +269,6 @@ async function confirmAction(message) {
   return answer && answer.id == 'Yes';
 }
 
-function createSettingsDirectory() {
-  let path = getSettingsDirectory();
-  if (!fs.existsSync(path)) fs.mkdirSync(path);
-}
-
-function getSettingsDirectory() {
-  return vscode.workspace.rootPath + '/.vscode';
-}
-
 function selectSite(sites) {
   let options = sites.map(function(site) {
     return {
@@ -271,13 +278,6 @@ function selectSite(sites) {
   });
 
   let promise = new Promise((resolve, reject) => {
-    if (vscode.workspace.rootPath && fs.existsSync(cacheJsonPath)) {
-      let jsonRaw = fs.readFileSync(cacheJsonPath).toString();
-      let site = JSON.parse(jsonRaw);
-      resolve(site);
-      return;
-    }
-
     let p = vscode.window.showQuickPick(options, { placeHolder: 'domain' });
     p.then(function(val) {
       //console.log('selected: ', val);
