@@ -25,8 +25,8 @@ function activate(context) {
     'site-configs': commandSiteConfigs
   };
 
-  context.subscriptions = Object.entries(commands).map(tuple => {
-    return vscode.commands.registerCommand('ansible-server-sites.' + tuple[0], tuple[1]);
+  const subscriptions = Object.entries(commands).map(tuple => {
+    return vscode.commands.registerCommand('ansible-server-sites.' + tuple[0], proxySiteCommand(tuple[1]));
   });
 
   for (let i = 0; i < subscriptions.length; i++) {
@@ -35,38 +35,42 @@ function activate(context) {
 }
 exports.activate = activate;
 
-async function commandSiteSSH(site = null) {
-  if (!site) site = await getSites().then(selectSite);
+// proxy site command, select site, then call command
+function proxySiteCommand(command, site = null){
+  return async function(){
+    if (!site) site = await getSites().then(selectSite);
+    if(!site) return;
+    return command(site);
+  }
+}
+
+async function commandSiteSSH(site) {
   let terminal = vscode.window.createTerminal(site.domain);
   terminal.sendText(site.ssh_command);
   terminal.show();
 }
 
-async function commandSSHTunnel(site = null) {
-  if (!site) site = await getSites().then(selectSite);
+async function commandSSHTunnel(site) {
   let terminal = vscode.window.createTerminal(site.domain + 'SSH tunnel');
   terminal.sendText(site.ssh_command + ' -R 9000:localhost:9000');
   terminal.show();
 }
 
-async function commandSiteWinSCP(site = null) {
-  if (!site) site = await getSites().then(selectSite);
+async function commandSiteWinSCP(site) {
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
   let winscpPath = config.get('winscp_path');
   let userHost = site.user + '@' + site.host;
   exec(`"${winscpPath}" "${userHost}`);
 }
 
-async function commandSitePuTTY(site = null) {
-  if (!site) site = await getSites().then(selectSite);
+async function commandSitePuTTY(site) {
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
   let puttyPath = config.get('putty_path');
   let userHost = site.user + '@' + site.domain;
   exec(`START ${puttyPath} ${userHost}`);
 }
 
-async function commandGitClone(site = null) {
-  if (!site) site = await getSites().then(selectSite);
+async function commandGitClone(site) {
   let url = await vscode.window.showInputBox({
     value: site.git_clone_url,
     prompt: 'Repository URL',
@@ -121,13 +125,7 @@ async function commandGitClone(site = null) {
   // }
 }
 
-async function commandSiteConfigs(site = null) {
-  if (!site) site = await getSites().then(selectSite);
-
-  if (!site) {
-    return false;
-  }
-
+async function commandSiteConfigs(site) {
   let debugData = {
     name: 'Listen for XDebug',
     type: 'php',
