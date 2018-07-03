@@ -16,26 +16,18 @@ let sitesCache = {
 const cacheJsonPath = getSettingsDirectory() + '/.ansible-site';
 
 function activate(context) {
-  let subscriptions = [];
+  const commands = {
+    'site-ssh': commandSiteSSH,
+    'ssh-tunnel': commandSSHTunnel,
+    winscp: commandSiteWinSCP,
+    'site-putty': commandSitePuTTY,
+    'site-clone': commandGitClone,
+    'site-configs': commandSiteConfigs
+  };
 
-  subscriptions.push(
-    vscode.commands.registerCommand('ansible-server-sites.site-ssh', commandSiteSSH)
-  );
-  subscriptions.push(
-    vscode.commands.registerCommand('ansible-server-sites.ssh-tunnel', commandSSHTunnel)
-  );
-  subscriptions.push(
-    vscode.commands.registerCommand('ansible-server-sites.winscp', commandSiteWinSCP)
-  );
-  subscriptions.push(
-    vscode.commands.registerCommand('ansible-server-sites.site-putty', commandSitePuTTY)
-  );
-  subscriptions.push(
-    vscode.commands.registerCommand('ansible-server-sites.site-clone', commandGitClone)
-  );
-  subscriptions.push(
-    vscode.commands.registerCommand('ansible-server-sites.site-configs', commandSiteConfigs)
-  );
+  context.subscriptions = Object.entries(commands).map(tuple => {
+    return vscode.commands.registerCommand('ansible-server-sites.' + tuple[0], tuple[1]);
+  });
 
   for (let i = 0; i < subscriptions.length; i++) {
     context.subscriptions.push(subscriptions[i]);
