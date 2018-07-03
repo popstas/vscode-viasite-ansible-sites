@@ -6,10 +6,9 @@ const vscode = require('vscode');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 const punycode = require('punycode');
 const exec = require('child_process').exec;
-let sitesCache = {
+const sitesCache = {
   time: 0,
   sites: []
 };
@@ -59,33 +58,33 @@ function proxySiteCommand(command, site = null) {
 }
 
 async function commandSiteSSH(site) {
-  let terminal = vscode.window.createTerminal(site.domain);
+  const terminal = vscode.window.createTerminal(site.domain);
   terminal.sendText(site.ssh_command);
   terminal.show();
 }
 
 async function commandSSHTunnel(site) {
-  let terminal = vscode.window.createTerminal(site.domain + 'SSH tunnel');
+  const terminal = vscode.window.createTerminal(site.domain + 'SSH tunnel');
   terminal.sendText(site.ssh_command + ' -R 9000:localhost:9000');
   terminal.show();
 }
 
 async function commandSiteWinSCP(site) {
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
-  let winscpPath = config.get('winscp_path');
-  let userHost = site.user + '@' + site.host;
+  const winscpPath = config.get('winscp_path');
+  const userHost = site.user + '@' + site.host;
   exec(`"${winscpPath}" "${userHost}`);
 }
 
 async function commandSitePuTTY(site) {
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
-  let puttyPath = config.get('putty_path');
-  let userHost = site.user + '@' + site.domain;
+  const puttyPath = config.get('putty_path');
+  const userHost = site.user + '@' + site.domain;
   exec(`START ${puttyPath} ${userHost}`);
 }
 
 async function commandGitClone(site) {
-  let url = await vscode.window.showInputBox({
+  const url = await vscode.window.showInputBox({
     value: site.git_clone_url,
     prompt: 'Repository URL',
     ignoreFocusOut: true
@@ -98,8 +97,8 @@ async function commandGitClone(site) {
     value,
     ignoreFocusOut: true
   });
-  let name = path.basename(site.site_root);
-  let clonePath = parentPath + path.sep + name;
+  const name = path.basename(site.site_root);
+  const clonePath = parentPath + path.sep + name;
   clonePath = clonePath.split('\\').join('/');
 
   // Open project in new window
@@ -107,15 +106,15 @@ async function commandGitClone(site) {
     vscode.window.showInformationMessage(
       name + ' exists at ' + parentPath + ', opening in new window'
     );
-    let uri = vscode.Uri.parse('file:///' + clonePath);
+    const uri = vscode.Uri.parse('file:///' + clonePath);
     vscode.commands.executeCommand('vscode.openFolder', uri, true);
     return false;
   }
 
   // clone terminal command
-  let terminal = vscode.window.createTerminal();
-  let sshCommand = 'git clone ' + url + ' ' + clonePath;
-  let openCommand = 'code ' + clonePath;
+  const terminal = vscode.window.createTerminal();
+  const sshCommand = 'git clone ' + url + ' ' + clonePath;
+  const openCommand = 'code ' + clonePath;
   terminal.sendText(sshCommand + ' && ' + openCommand);
   terminal.show();
 
@@ -150,7 +149,7 @@ async function commandSiteConfigs(site, projectRoot = null, yesToAll = false) {
   const settingsPath = projectRoot + '/.vscode';
   if (!fs.existsSync(settingsPath)) fs.mkdirSync(settingsPath);
 
-  let debugData = {
+  const debugData = {
     name: 'Listen for XDebug',
     type: 'php',
     request: 'launch',
@@ -159,8 +158,7 @@ async function commandSiteConfigs(site, projectRoot = null, yesToAll = false) {
     localSourceRoot: '${workspaceRoot}'
   };
 
-  let sessionName = site.user + '@' + site.host;
-
+  const sessionName = site.user + '@' + site.host;
   let winscpConfig = '';
   winscpConfig += `[Sessions\\${sessionName}]\n`;
   winscpConfig += `HostName=${site.host}\n`;
@@ -168,7 +166,7 @@ async function commandSiteConfigs(site, projectRoot = null, yesToAll = false) {
   winscpConfig += `LocalDirectory=C:\n`;
   winscpConfig += `RemoteDirectory=${site.site_root}`;
 
-  let deployConfig = {
+  const deployConfig = {
     packages: [
       {
         name: site.domain,
@@ -196,7 +194,7 @@ async function commandSiteConfigs(site, projectRoot = null, yesToAll = false) {
   // .ansible-site
   msg = 'Bind current project to ' + site.domain + '?';
   if (yesToAll || (!fs.existsSync(cacheJsonPath) && (await confirmAction(msg)))) {
-    let cacheJsonPath = settingsPath + '/.ansible-site';
+    const cacheJsonPath = settingsPath + '/.ansible-site';
     try {
       fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
     } catch (err) {
@@ -207,7 +205,7 @@ async function commandSiteConfigs(site, projectRoot = null, yesToAll = false) {
   // deploy reloaded
   msg = 'Write deploy reloaded config to workspace settings?';
   if (yesToAll || (await confirmAction(msg))) {
-    let workspaceSettingsPath = settingsPath + '/settings.json';
+    const workspaceSettingsPath = settingsPath + '/settings.json';
     try {
       let settings = {};
       if (fs.existsSync(workspaceSettingsPath)) {
@@ -223,7 +221,7 @@ async function commandSiteConfigs(site, projectRoot = null, yesToAll = false) {
   // launch.json
   msg = 'Write xdebug configuration to launch.json?';
   if (yesToAll || (await confirmAction(msg))) {
-    let launchPath = settingsPath + '/launch.json';
+    const launchPath = settingsPath + '/launch.json';
     try {
       let settings = {
         version: '0.2.0',
@@ -277,27 +275,26 @@ async function confirmAction(message) {
 }
 
 function selectSite(sites) {
-  let options = sites.map(function(site) {
+  const options = sites.map(function(site) {
     return {
       label: punycode.toUnicode(site.domain),
       description: site.host + (site.group ? ' / ' + site.group : '')
     };
   });
 
-  let promise = new Promise((resolve, reject) => {
-    let p = vscode.window.showQuickPick(options, { placeHolder: 'domain' });
+  return new Promise((resolve, reject) => {
+    const p = vscode.window.showQuickPick(options, { placeHolder: 'domain' });
     p.then(function(val) {
       //console.log('selected: ', val);
       if (val === undefined) {
         return 'Nothing selected';
       }
 
-      let ind = options.indexOf(val);
-      let site = sites[ind];
+      const ind = options.indexOf(val);
+      const site = sites[ind];
       resolve(site);
     });
   });
-  return promise;
 }
 
 // this method is called when your extension is deactivated
@@ -310,7 +307,7 @@ function getSites() {
   return new Promise((resolve, reject) => {
     // cache
     if (sitesCache.sites.length > 0) {
-      let cacheAgeSeconds = (new Date().getTime() - sitesCache.time.getTime()) / 1000;
+      const cacheAgeSeconds = (new Date().getTime() - sitesCache.time.getTime()) / 1000;
       // console.log('cache age: ' + cacheAgeSeconds);
       if (cacheAgeSeconds < cacheTime) {
         // console.log('resolve sites from runtime cache');
