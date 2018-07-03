@@ -87,7 +87,7 @@
         "release-vscode": "node ./node_modules/vsce/out/vsce publish -p $VSCODE_TOKEN",
         "release-github": "conventional-github-releaser -p angular",
         "version": "npm run changelog && git add CHANGELOG.md",
-        "postversion": "git push --tags && npm run release-github"
+        "postversion": "git push origin master --tags && npm run release-github"
     },
     "devDependencies": {
         "@types/node": "^7.0.56",
