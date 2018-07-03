@@ -13,12 +13,10 @@ let sitesCache = {
   time: 0,
   sites: []
 };
-let globalContext;
 const cacheJsonPath = getSettingsDirectory() + '/.ansible-site';
 
 function activate(context) {
   let subscriptions = [];
-  globalContext = context;
 
   subscriptions.push(
     vscode.commands.registerCommand('ansible-server-sites.site-ssh', commandSiteSSH)
@@ -53,7 +51,7 @@ async function commandSiteSSH() {
   terminal.show();
 }
 
-async function commandSSHTunnel(){
+async function commandSSHTunnel() {
   let sites = await getSites();
   let site = await selectSite(sites);
   let terminal = vscode.window.createTerminal(site.domain + 'SSH tunnel');
@@ -65,7 +63,7 @@ async function commandSiteWinSCP() {
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
   let sites = await getSites();
   let site = await selectSite(sites);
-  let winscpPath = config.get('winscp_path')
+  let winscpPath = config.get('winscp_path');
   let userHost = site.user + '@' + site.host;
   exec(`"${winscpPath}" "${userHost}`);
 }
@@ -74,7 +72,7 @@ async function commandSitePuTTY() {
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
   let sites = await getSites();
   let site = await selectSite(sites);
-  let puttyPath = config.get('putty_path')
+  let puttyPath = config.get('putty_path');
   let userHost = site.user + '@' + site.domain;
   exec(`START ${puttyPath} ${userHost}`);
 }
@@ -82,9 +80,6 @@ async function commandSitePuTTY() {
 async function commandGitClone() {
   let sites = await getSites();
   let site = await selectSite(sites);
-
-  //console.log('site after selectSite: ', site);
-  //console.log(site.git_clone_url);
 
   let url = await vscode.window.showInputBox({
     value: site.git_clone_url,
@@ -201,7 +196,7 @@ async function commandSiteConfigs() {
   let answer;
 
   // .ansible-site
-  if(!fs.existsSync(cacheJsonPath)){
+  if (!fs.existsSync(cacheJsonPath)) {
     answer = await vscode.window.showInformationMessage(
       'Bind current project to ' + site.domain + '?',
       {
