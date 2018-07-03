@@ -43,44 +43,38 @@ function activate(context) {
 }
 exports.activate = activate;
 
-async function commandSiteSSH() {
-  let sites = await getSites();
-  let site = await selectSite(sites);
+async function commandSiteSSH(site = null) {
+  if (!site) site = await getSites().then(selectSite);
   let terminal = vscode.window.createTerminal(site.domain);
   terminal.sendText(site.ssh_command);
   terminal.show();
 }
 
-async function commandSSHTunnel() {
-  let sites = await getSites();
-  let site = await selectSite(sites);
+async function commandSSHTunnel(site = null) {
+  if (!site) site = await getSites().then(selectSite);
   let terminal = vscode.window.createTerminal(site.domain + 'SSH tunnel');
   terminal.sendText(site.ssh_command + ' -R 9000:localhost:9000');
   terminal.show();
 }
 
-async function commandSiteWinSCP() {
+async function commandSiteWinSCP(site = null) {
+  if (!site) site = await getSites().then(selectSite);
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
-  let sites = await getSites();
-  let site = await selectSite(sites);
   let winscpPath = config.get('winscp_path');
   let userHost = site.user + '@' + site.host;
   exec(`"${winscpPath}" "${userHost}`);
 }
 
-async function commandSitePuTTY() {
+async function commandSitePuTTY(site = null) {
+  if (!site) site = await getSites().then(selectSite);
   const config = vscode.workspace.getConfiguration('ansible-server-sites');
-  let sites = await getSites();
-  let site = await selectSite(sites);
   let puttyPath = config.get('putty_path');
   let userHost = site.user + '@' + site.domain;
   exec(`START ${puttyPath} ${userHost}`);
 }
 
-async function commandGitClone() {
-  let sites = await getSites();
-  let site = await selectSite(sites);
-
+async function commandGitClone(site = null) {
+  if (!site) site = await getSites().then(selectSite);
   let url = await vscode.window.showInputBox({
     value: site.git_clone_url,
     prompt: 'Repository URL',
@@ -144,9 +138,8 @@ function getSettingsDirectory() {
   return vscode.workspace.rootPath + '/.vscode';
 }
 
-async function commandSiteConfigs() {
-  let sites = await getSites();
-  let site = await selectSite(sites);
+async function commandSiteConfigs(site = null) {
+  if (!site) site = await getSites().then(selectSite);
 
   if (!site) {
     return false;
