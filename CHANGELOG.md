@@ -1,3 +1,13 @@
+<a name="0.5.0"></a>
+# [0.5.0](https://github.com/viasite/vscode-viasite-ansible-sites/compare/v0.4.3...v0.5.0) (2018-07-03)
+
+
+### Features
+
+* configure project while clone ([1b33f04](https://github.com/viasite/vscode-viasite-ansible-sites/commit/1b33f04))
+
+
+
 <a name="0.4.3"></a>
 ## [0.4.3](https://github.com/viasite/vscode-viasite-ansible-sites/compare/v0.4.2...v0.4.3) (2018-07-03)
 
