@@ -26,7 +26,10 @@ function activate(context) {
   };
 
   const subscriptions = Object.entries(commands).map(tuple => {
-    return vscode.commands.registerCommand('ansible-server-sites.' + tuple[0], proxySiteCommand(tuple[1]));
+    return vscode.commands.registerCommand(
+      'ansible-server-sites.' + tuple[0],
+      proxySiteCommand(tuple[1])
+    );
   });
 
   for (let i = 0; i < subscriptions.length; i++) {
@@ -36,12 +39,12 @@ function activate(context) {
 exports.activate = activate;
 
 // proxy site command, select site, then call command
-function proxySiteCommand(command, site = null){
-  return async function(){
+function proxySiteCommand(command, site = null) {
+  return async function() {
     if (!site) site = await getSites().then(selectSite);
-    if(!site) return;
+    if (!site) return;
     return command(site);
-  }
+  };
 }
 
 async function commandSiteSSH(site) {
@@ -125,7 +128,7 @@ async function commandGitClone(site) {
   // }
 }
 
-async function commandSiteConfigs(site) {
+async function commandSiteConfigs(site, yesToAll = false) {
   let debugData = {
     name: 'Listen for XDebug',
     type: 'php',
@@ -167,22 +170,9 @@ async function commandSiteConfigs(site) {
     ]
   };
 
-  let answer;
-
   // .ansible-site
   if (!fs.existsSync(cacheJsonPath)) {
-    answer = await vscode.window.showInformationMessage(
-      'Bind current project to ' + site.domain + '?',
-      {
-        title: 'Yes',
-        id: 'ansible-server-bind-site'
-      },
-      {
-        title: 'No',
-        id: 'No'
-      }
-    );
-    if (answer && answer.id == 'ansible-server-bind-site') {
+    if (yesToAll || (await confirmAction('Bind current project to ' + site.domain + '?'))) {
       try {
         createSettingsDirectory();
         fs.writeFileSync(cacheJsonPath, JSON.stringify(site, null, '\t'));
@@ -193,18 +183,7 @@ async function commandSiteConfigs(site) {
   }
 
   // deploy reloaded
-  answer = await vscode.window.showInformationMessage(
-    'Write deploy reloaded config to workspace settings?',
-    {
-      title: 'Yes',
-      id: 'ansible-server-deploy-config'
-    },
-    {
-      title: 'No',
-      id: 'No'
-    }
-  );
-  if (answer && answer.id == 'ansible-server-deploy-config') {
+  if (yesToAll || (await confirmAction('Write deploy reloaded config to workspace settings?'))) {
     let settingsPath = getSettingsDirectory() + '/settings.json';
     try {
       createSettingsDirectory();
@@ -220,18 +199,7 @@ async function commandSiteConfigs(site) {
   }
 
   // launch.json
-  answer = await vscode.window.showInformationMessage(
-    'Write xdebug configuration to launch.json?',
-    {
-      title: 'Yes',
-      id: 'ansible-server-xdebug-config'
-    },
-    {
-      title: 'No',
-      id: 'No'
-    }
-  );
-  if (answer && answer.id == 'ansible-server-xdebug-config') {
+  if (yesToAll || (await confirmAction('Write xdebug configuration to launch.json?'))) {
     let settingsPath = getSettingsDirectory() + '/launch.json';
     try {
       createSettingsDirectory();
@@ -254,18 +222,7 @@ async function commandSiteConfigs(site) {
     const config = vscode.workspace.getConfiguration('ansible-server-sites');
     const winscpIniPath = config.get('winscp_ini_path') || process.env.APPDATA + '\\winscp.ini';
     if (fs.existsSync(winscpIniPath)) {
-      answer = await vscode.window.showInformationMessage(
-        'Write winscp.ini?',
-        {
-          title: 'Yes',
-          id: 'ansible-server-write-winscp'
-        },
-        {
-          title: 'No',
-          id: 'No'
-        }
-      );
-      if (answer && answer.id == 'ansible-server-write-winscp') {
+      if (yesToAll || (await confirmAction('Write winscp.ini?'))) {
         try {
           fs.appendFileSync(winscpIniPath, '\n\n' + winscpConfig);
         } catch (err) {
@@ -279,6 +236,21 @@ async function commandSiteConfigs(site) {
       );
     }
   }
+}
+
+async function confirmAction(message) {
+  const answer = await vscode.window.showInformationMessage(
+    message,
+    {
+      title: 'Yes',
+      id: 'Yes'
+    },
+    {
+      title: 'No',
+      id: 'No'
+    }
+  );
+  return answer && answer.id == 'Yes';
 }
 
 function createSettingsDirectory() {
