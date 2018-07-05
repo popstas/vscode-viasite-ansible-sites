@@ -1,3 +1,14 @@
+<a name="0.5.1"></a>
+## [0.5.1](https://github.com/viasite/vscode-viasite-ansible-sites/compare/v0.5.0...v0.5.1) (2018-07-05)
+
+
+### Bug Fixes
+
+* broken clone command after const refactoring ([8ba3282](https://github.com/viasite/vscode-viasite-ansible-sites/commit/8ba3282))
+* git push command in postversion ([eef6152](https://github.com/viasite/vscode-viasite-ansible-sites/commit/eef6152))
+
+
+
 <a name="0.5.0"></a>
 # [0.5.0](https://github.com/viasite/vscode-viasite-ansible-sites/compare/v0.4.3...v0.5.0) (2018-07-03)
 

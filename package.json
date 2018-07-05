@@ -2,7 +2,7 @@
     "name": "ansible-server-sites",
     "displayName": "ansible-server-sites",
     "description": "Operations with sites deployed with viasite-ansible/ansible-server",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "publisher": "popstas",
     "engines": {
         "vscode": "^1.15.0"
