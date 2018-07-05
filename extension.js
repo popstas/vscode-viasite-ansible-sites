@@ -99,7 +99,7 @@ const commandGitClone = async site => {
     ignoreFocusOut: true
   });
   const name = path.basename(site.site_root);
-  const clonePath = parentPath + path.sep + name;
+  let clonePath = parentPath + path.sep + name;
   clonePath = clonePath.split('\\').join('/');
 
   // Open project in new window
